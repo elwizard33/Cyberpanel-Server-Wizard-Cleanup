@@ -18,7 +18,7 @@ jobs:
       uses: actions/checkout@v2
 
     - name: Set up ShellCheck
-      uses: ludeeus/action-shellcheck@2.2.1
+      uses: ludeeus/action-shellcheck@2.0.0
 
     - name: Run ShellCheck
       run: shellcheck scripts/*.sh
