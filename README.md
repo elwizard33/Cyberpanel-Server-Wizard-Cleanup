@@ -48,13 +48,13 @@ These scripts are designed to help identify and clean potential malware and rans
 You can directly download and execute the **Basic** version of the script using the following command:
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/CP-Server-Wizard-Cleanup/refs/heads/main/wizard_cleanup.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup/refs/heads/main/scripts/wizard_cleanup.sh)"
 ```
 
 For the **Advanced** version, use this command:
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/CP-Server-Wizard-Cleanup/refs/heads/main/advanced_wizard_cleanup.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup/refs/heads/main/scripts/advanced_wizard_cleanup.sh)"
 ```
 
 ### Support
