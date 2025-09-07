@@ -26,7 +26,7 @@ Considerations:
 
 ## 3. Dry-Run Defaults
 
-Global configuration defaults maintain a dry-run orientation. Even with `AI_WIZARD_DRY_RUN=false`, destruction requires explicit intent through CLI flags. This layered opt-in design mitigates accidental misuse in scripted environments.
+Global configuration defaults maintain a dry-run orientation. Even with `CYBERZARD_DRY_RUN=false`, destruction requires explicit intent through CLI flags. This layered opt-in design mitigates accidental misuse in scripted environments.
 
 ## 4. Sandboxed / Restricted Execution
 
@@ -52,7 +52,7 @@ Potential future dynamic scoring components:
 
 ## 6. Data Handling & Privacy
 
-No persistent transcripts are written by default. Environment variable `AI_WIZARD_NO_HISTORY` further minimizes in-memory retention. Evidence preservation copies only explicitly removed files, not arbitrary system logs.
+No persistent transcripts are written by default. Environment variable `CYBERZARD_NO_HISTORY` further minimizes in-memory retention. Evidence preservation copies only explicitly removed files, not arbitrary system logs.
 
 ## 7. Supply Chain Considerations
 
@@ -77,7 +77,7 @@ Planned / potential enhancements:
 
 - Hash & size logging for preserved evidence.
 - Append-only remediation ledger with cryptographic hash chain.
-- Optional offline mode enforcing `AI_WIZARD_MODEL_PROVIDER=none` regardless of env.
+- Optional offline mode enforcing `CYBERZARD_MODEL_PROVIDER=none` regardless of env.
 - Configurable per-category remediation policy (e.g., auto-kill low-risk miners in sandbox context).
 - ML-based anomaly scoring augmentation.
 

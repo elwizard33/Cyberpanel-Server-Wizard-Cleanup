@@ -155,18 +155,18 @@ class Settings(BaseModel):
 
     @classmethod
     def from_env(cls) -> "Settings":
-        provider = os.getenv("AI_WIZARD_MODEL_PROVIDER", "none").lower()
+        provider = os.getenv("CYBERZARD_MODEL_PROVIDER", "none").lower()
         settings = cls(
-            evidence_dir=Path(os.getenv("AI_WIZARD_EVIDENCE_DIR", "/var/lib/cyberzard/evidence")),
-            dry_run=os.getenv("AI_WIZARD_DRY_RUN", "true").lower() == "true",
-            preserve_evidence=os.getenv("AI_WIZARD_PRESERVE_EVIDENCE", "false").lower() == "true",
-            force=os.getenv("AI_WIZARD_FORCE", "false").lower() == "true",
-            severity_filter=Severity(os.getenv("AI_WIZARD_SEVERITY_FILTER")) if os.getenv("AI_WIZARD_SEVERITY_FILTER") else None,
+            evidence_dir=Path(os.getenv("CYBERZARD_EVIDENCE_DIR", "/var/lib/cyberzard/evidence")),
+            dry_run=os.getenv("CYBERZARD_DRY_RUN", "true").lower() == "true",
+            preserve_evidence=os.getenv("CYBERZARD_PRESERVE_EVIDENCE", "false").lower() == "true",
+            force=os.getenv("CYBERZARD_FORCE", "false").lower() == "true",
+            severity_filter=Severity(os.getenv("CYBERZARD_SEVERITY_FILTER")) if os.getenv("CYBERZARD_SEVERITY_FILTER") else None,
             model_provider=provider,
             anthropic_api_key=os.getenv("ANTHROPIC_API_KEY"),
             openai_api_key=os.getenv("OPENAI_API_KEY"),
-            max_ai_context_bytes=int(os.getenv("AI_WIZARD_MAX_CONTEXT_BYTES", "8000")),
-            no_history=os.getenv("AI_WIZARD_NO_HISTORY", "false").lower() == "true",
+            max_ai_context_bytes=int(os.getenv("CYBERZARD_MAX_CONTEXT_BYTES", "8000")),
+            no_history=os.getenv("CYBERZARD_NO_HISTORY", "false").lower() == "true",
         )
 
         # Auto-disable provider if key missing.

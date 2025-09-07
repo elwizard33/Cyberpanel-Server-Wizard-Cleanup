@@ -96,7 +96,7 @@ Set environment variables (See `configuration.md` for full list):
 ```bash
 export OPENAI_API_KEY=sk-...        # for provider openai
 export ANTHROPIC_API_KEY=...        # for provider anthropic
-export AI_WIZARD_MODEL_PROVIDER=openai
+export CYBERZARD_MODEL_PROVIDER=openai
 ```
 
 Then test an explanation:

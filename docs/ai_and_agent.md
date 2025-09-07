@@ -7,7 +7,7 @@ This section explains how AI functionality is integrated: optional enrichment of
 
 ## 1. Provider Abstraction Overview
 
-The system supports a pluggable provider model chosen via `AI_WIZARD_MODEL_PROVIDER` (`openai`, `anthropic`, or `none`).
+The system supports a pluggable provider model chosen via `CYBERZARD_MODEL_PROVIDER` (`openai`, `anthropic`, or `none`).
 
 Design goals:
 
@@ -76,12 +76,12 @@ Safeguards implemented / planned:
 - Content minimization: Only hashed / truncated snippets for large files (future enhancement) to avoid exfiltration of secrets.
 - Strict tool allowlist: No arbitrary shell execution exposed to model.
 - Max steps cap: Prevents runaway loops and cost explosion.
-- Context size limit (`AI_WIZARD_MAX_CONTEXT_BYTES`): Hard ceiling on bytes passed to provider.
+- Context size limit (`CYBERZARD_MAX_CONTEXT_BYTES`): Hard ceiling on bytes passed to provider.
 - Non-deterministic disclaimers: Summaries avoid giving definitive forensic conclusions; they propose next steps.
 
 ## 8. Privacy & Data Handling
 
-No persistent conversation history is stored unless future feature toggles are added. Setting `AI_WIZARD_NO_HISTORY=true` can further reduce retention (agent refrains from archiving transcripts beyond ephemeral in-memory loop).
+No persistent conversation history is stored unless future feature toggles are added. Setting `CYBERZARD_NO_HISTORY=true` can further reduce retention (agent refrains from archiving transcripts beyond ephemeral in-memory loop).
 
 ## 9. Extending Providers (Planned)
 

@@ -34,8 +34,8 @@ openai = ["openai>=1.0.0"]
 dev = ["pytest>=7.0.0"]
 
 [project.scripts]
-cyberzard = "ai_wizard.cli:app"
-cp-ai-wizard = "ai_wizard.cli:app"  # legacy alias
+cyberzard = "cyberzard.cli:app"
+cp-ai-wizard = "cyberzard.cli:app"  # legacy alias
 
 [build-system]
 requires = ["setuptools>=67.0", "wheel"]

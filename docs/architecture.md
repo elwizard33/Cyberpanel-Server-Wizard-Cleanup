@@ -49,15 +49,15 @@ This document describes major components, their responsibilities, and the end‑
 
 | Module | Path (prefix) | Responsibility |
 |--------|---------------|----------------|
-| `config` | `ai_wizard/config.py` | Settings, IOC constants, environment parsing |
-| `core.models` | `ai_wizard/core/models.py` | Data classes: Finding, ScanReport, RemediationAction, etc. |
-| `scanners` | `ai_wizard/scanners/` | Individual detection routines assembled by orchestrator |
-| `reporting` | `ai_wizard/reporting/` | Human (rich) & machine (JSON) formatting, advice generation |
-| `agent` | `ai_wizard/agent.py` & related | ReAct loop, model prompt construction |
-| `tools` | `ai_wizard/tools/` | Tool registry + safe callable wrappers for agent |
-| `remediation` | `ai_wizard/remediation/` | Plan construction & execution with safety checks |
-| `evidence` | `ai_wizard/evidence.py` | Persistence of last scan, file preservation |
-| `logging` | `ai_wizard/logging/` | Logging initialization (future structured logging) |
+| `config` | `cyberzard/config.py` | Settings, IOC constants, environment parsing |
+| `core.models` | `cyberzard/core/models.py` | Data classes: Finding, ScanReport, RemediationAction, etc. |
+| `scanners` | `cyberzard/scanners/` | Individual detection routines assembled by orchestrator |
+| `reporting` | `cyberzard/reporting/` | Human (rich) & machine (JSON) formatting, advice generation |
+| `agent` | `cyberzard/agent.py` & related | ReAct loop, model prompt construction |
+| `tools` | `cyberzard/tools/` | Tool registry + safe callable wrappers for agent |
+| `remediation` | `cyberzard/remediation/` | Plan construction & execution with safety checks |
+| `evidence` | `cyberzard/evidence.py` | Persistence of last scan, file preservation |
+| `logging` | `cyberzard/logging/` | Logging initialization (future structured logging) |
 | `security` | various | Allowlist checks, context trimming, severity policy |
 
 ## 3. Data Flow Sequence (Scan → Report → Agent → Remediate)

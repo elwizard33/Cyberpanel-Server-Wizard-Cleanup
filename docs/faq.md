@@ -23,7 +23,7 @@ Remediation is intentionally constrained: only explicit `--delete` / `--kill` ac
 
 ## 5. How do I add a new scanner?
 
-Create a module in `ai_wizard/scanners/` returning a list of `Finding` objects, then register it in the orchestrator (scanner runner list). Keep execution fast and side-effect free.
+Create a module in `cyberzard/scanners/` returning a list of `Finding` objects, then register it in the orchestrator (scanner runner list). Keep execution fast and side-effect free.
 
 ## 6. How do I export findings as JSON?
 
@@ -39,7 +39,7 @@ Default directory: `/var/lib/cp-ai-wizard/evidence`. It holds `last_scan.json` a
 
 ## 9. How can I suppress or filter noisy findings?
 
-Currently you can post-process JSON output or set `AI_WIZARD_SEVERITY_FILTER` (future expansion may provide ignore patterns or policy YAML). Contributions welcome.
+Currently you can post-process JSON output or set `CYBERZARD_SEVERITY_FILTER` (future expansion may provide ignore patterns or policy YAML). Contributions welcome.
 
 ## 10. What does a high or critical severity imply?
 
@@ -55,7 +55,7 @@ On each scan, the tool loads `last_scan.json` (if present) and compares finding 
 
 ## 13. How do I get an AI summary safely offline?
 
-Set `AI_WIZARD_MODEL_PROVIDER=none` explicitly. The `explain` command will produce non-network summary while guaranteeing no external API invocation.
+Set `CYBERZARD_MODEL_PROVIDER=none` explicitly. The `explain` command will produce non-network summary while guaranteeing no external API invocation.
 
 ## 14. Can I run this inside a container?
 
@@ -67,7 +67,7 @@ Currently a stub exists; if `python-yara` is installed and rules directory is co
 
 ## 16. How are API costs controlled?
 
-Context bytes limit (`AI_WIZARD_MAX_CONTEXT_BYTES`) and step caps for agent keep token usage bounded. No secrets or large file contents are transmitted by default.
+Context bytes limit (`CYBERZARD_MAX_CONTEXT_BYTES`) and step caps for agent keep token usage bounded. No secrets or large file contents are transmitted by default.
 
 ## 17. How can I contribute?
 

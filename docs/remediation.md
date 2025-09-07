@@ -19,7 +19,7 @@ Mapping logic (simplified):
 
 ## 2. Dry-Run Philosophy
 
-The global settings default to non-destructive posture. Even if `AI_WIZARD_DRY_RUN=false`, the CLI requires explicit flags (`--delete` or `--kill`) to execute those specific action types. No implicit remediation occurs during a plain `scan`.
+The global settings default to non-destructive posture. Even if `CYBERZARD_DRY_RUN=false`, the CLI requires explicit flags (`--delete` or `--kill`) to execute those specific action types. No implicit remediation occurs during a plain `scan`.
 
 ## 3. Evidence Preservation
 
