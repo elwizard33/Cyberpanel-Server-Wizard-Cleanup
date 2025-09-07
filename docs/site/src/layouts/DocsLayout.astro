@@ -1,0 +1,38 @@
+---
+const { title = 'CyberPanel AI Wizard Docs' } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2/css/pico.min.css" />
+  </head>
+  <body>
+    <header style="padding:1rem;">
+      <h1 style="margin:0;font-size:1.4rem;">CyberPanel AI Wizard</h1>
+      <nav>
+        <ul style="display:flex;gap:0.75rem;flex-wrap:wrap;font-size:0.9rem;">
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/">Home</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/installation">Installation</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/configuration">Configuration</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/commands">Commands</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/ai-and-agent">AI & Agent</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/remediation">Remediation</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/security">Security</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/architecture">Architecture</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/roadmap">Roadmap</a></li>
+          <li><a href="/Cyberpanel-Server-Wizard-Cleanup/faq">FAQ</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="container">
+      <article>
+        <slot />
+      </article>
+    </main>
+    <footer style="text-align:center;font-size:0.8rem;padding:2rem;color:#777;">
+      <p>© {new Date().getFullYear()} CyberPanel AI Wizard • <a href="https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup">GitHub</a></p>
+    </footer>
+  </body>
+</html>

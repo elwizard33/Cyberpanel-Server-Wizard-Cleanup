@@ -1,0 +1,8 @@
+---
+import DocsLayout from '../layouts/DocsLayout.astro';
+import fs from 'node:fs';
+const content = fs.readFileSync(new URL('../../../../docs/architecture.md', import.meta.url), 'utf8');
+---
+<DocsLayout title="System Architecture">
+  <pre style="white-space:pre-wrap;">{content}</pre>
+</DocsLayout>
