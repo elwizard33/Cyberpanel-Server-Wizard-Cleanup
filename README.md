@@ -157,7 +157,7 @@ cyberzard shell
 | AI_WIZARD_MODEL_PROVIDER | `openai`, `anthropic`, or `none` | `none` |
 | OPENAI_API_KEY | OpenAI key (if provider=openai) | - |
 | ANTHROPIC_API_KEY | Anthropic key (if provider=anthropic) | - |
-| AI_WIZARD_EVIDENCE_DIR | Evidence / hashing directory | `/var/lib/cp-ai-wizard/evidence` |
+| AI_WIZARD_EVIDENCE_DIR | Evidence / hashing directory | `/var/lib/cyberzard/evidence` |
 | AI_WIZARD_DRY_RUN | Global dry-run toggle | `true` |
 | AI_WIZARD_PRESERVE_EVIDENCE | Enable evidence preservation | `false` |
 | AI_WIZARD_FORCE | Allow operations outside allowlist (danger) | `false` |
