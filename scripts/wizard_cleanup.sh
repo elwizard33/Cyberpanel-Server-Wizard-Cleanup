@@ -27,7 +27,7 @@ BLA_active_loading_animation=()
 BLA_loading_animation_frame_interval=0.1
 BLA_loading_animation_pid=0
 
-BLA::play_loading_animation_loop() {
+BLA_play_loading_animation_loop() {
     while true; do
         for frame in "${BLA_active_loading_animation[@]}"; do
             printf "\r%s" "${frame}"
@@ -36,12 +36,12 @@ BLA::play_loading_animation_loop() {
     done
 }
 
-BLA::start_loading_animation() {
+BLA_start_loading_animation() {
     BLA_active_loading_animation=("$@")
-    BLA::play_loading_animation_loop & BLA_loading_animation_pid="$!"
+    BLA_play_loading_animation_loop & BLA_loading_animation_pid="$!"
 }
 
-BLA::stop_loading_animation() {
+BLA_stop_loading_animation() {
     kill "${BLA_loading_animation_pid}" &> /dev/null
     printf "\n"
 }
@@ -114,11 +114,11 @@ detect_encrypted_files() {
 
 # Diagnostic phase
 wizard_says "Performing diagnostic checks on your server..."
-BLA::start_loading_animation "${BLA_filling_bar[@]}"
+BLA_start_loading_animation "${BLA_filling_bar[@]}"
 malicious_files=$(detect_malicious_files)
 has_suspicious_processes=$(detect_suspicious_processes)
 encrypted_files=$(detect_encrypted_files)
-BLA::stop_loading_animation
+BLA_stop_loading_animation
 
 # Present diagnostic results and prompt the user
 wizard_says "Diagnostic complete. Here is what has been discovered:"
@@ -140,7 +140,7 @@ fi
 # Initiate cleansing based on diagnostic
 [[ -n "$malicious_files" ]] && {
     wizard_says "Neutralizing detected malicious files..."
-    BLA::start_loading_animation "${BLA_classic[@]}"
+    BLA_start_loading_animation "${BLA_classic[@]}"
     for file in $malicious_files; do
         if rm -f "$file"; then
             echo "Removed $file"
@@ -148,14 +148,14 @@ fi
             echo "Failed to remove $file"
         fi
     done
-    BLA::stop_loading_animation
+    BLA_stop_loading_animation
 }
 
 [[ "$has_suspicious_processes" == "True" ]] && {
     wizard_says "Banish those conspiring processes..."
-    BLA::start_loading_animation "${BLA_filling_bar[@]}"
+    BLA_start_loading_animation "${BLA_filling_bar[@]}"
     ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs -r kill -9 2>/dev/null
-    BLA::stop_loading_animation
+    BLA_stop_loading_animation
 }
 
 # New Kinsing-specific cleanup adapted to wizard theme
@@ -327,7 +327,7 @@ cleanup_kinsing() {
 
 [[ -n "$encrypted_files" ]] && {
     wizard_says "Attempting to decrypt the detected encrypted files..."
-    BLA::start_loading_animation "${BLA_filling_bar[@]}"
+    BLA_start_loading_animation "${BLA_filling_bar[@]}"
     for enc_file in $encrypted_files; do
         case "$enc_file" in
             *.psaux)
@@ -341,7 +341,7 @@ cleanup_kinsing() {
                 ;;
         esac
     done
-    BLA::stop_loading_animation
+    BLA_stop_loading_animation
 }
 
 # Final report

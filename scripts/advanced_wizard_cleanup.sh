@@ -27,7 +27,7 @@ BLA_active_loading_animation=()
 BLA_loading_animation_frame_interval=0.1
 BLA_loading_animation_pid=0
 
-BLA::play_loading_animation_loop() {
+BLA_play_loading_animation_loop() {
     while true; do
         for frame in "${BLA_active_loading_animation[@]}"; do
             printf "\r%s" "${frame}"
@@ -36,13 +36,13 @@ BLA::play_loading_animation_loop() {
     done
 }
 
-BLA::start_loading_animation() {
+BLA_start_loading_animation() {
     BLA_active_loading_animation=("$@")
-    BLA::play_loading_animation_loop &
+    BLA_play_loading_animation_loop &
     BLA_loading_animation_pid="$!"
 }
 
-BLA::stop_loading_animation() {
+BLA_stop_loading_animation() {
     kill "${BLA_loading_animation_pid}" &> /dev/null
     printf "\n"
 }
@@ -96,7 +96,8 @@ fi
 
 # Function to prompt user for confirmation
 prompt_user() {
-    read -r -p "$1 (yes/no) " response  # shellcheck disable=SC2162
+    # shellcheck disable=SC2162
+    read -r -p "$1 (yes/no) " response
     if [[ "$response" != "yes" ]]; then
         return 1
     fi
@@ -180,7 +181,8 @@ check_for_malicious_users() {
     # Verify suspicious users with the user and log responses
     printf '%s\n' "Detected possible malicious users: ${suspicious_users[*]}"
     for user in "${suspicious_users[@]}"; do
-        read -r -p "Do you recognize the user '$user'? (yes/no) " response  # shellcheck disable=SC2162
+    # shellcheck disable=SC2162
+    read -r -p "Do you recognize the user '$user'? (yes/no) " response
         log_message="User '$user': $response"
         echo "$log_message" | tee -a "$log_file"
 
@@ -209,7 +211,8 @@ check_for_unauthorized_keys() {
         while IFS= read -r key; do
                 if [[ -n "$key" ]]; then
                     echo "Key found: $key"
-            read -r -p "Do you recognize this SSH key? (yes/no) " response  # shellcheck disable=SC2162
+            # shellcheck disable=SC2162
+            read -r -p "Do you recognize this SSH key? (yes/no) " response
                     log_message="Key: $key - Recognized: $response"
                     echo "$log_message" | tee -a "$log_file"
 
@@ -235,13 +238,13 @@ check_for_unauthorized_keys() {
 
 # Diagnostic phase
 wizard_says "Performing diagnostic checks on your server..."
-BLA::start_loading_animation "${BLA_filling_bar[@]}"
+BLA_start_loading_animation "${BLA_filling_bar[@]}"
 malicious_files=$(detect_malicious_files)
 has_suspicious_processes=$(detect_suspicious_processes)
 encrypted_files=$(detect_encrypted_files)
 suspicious_users=$(check_for_malicious_users)
 unauthorized_keys=$(check_for_unauthorized_keys)
-BLA::stop_loading_animation
+BLA_stop_loading_animation
 
 # Diagnostic results display
 wizard_says "Diagnostic complete. Here is what has been discovered:"
@@ -269,7 +272,7 @@ fi
 if [[ -n "$malicious_files" ]]; then
     wizard_says "Neutralizing detected malicious files..."
     if prompt_user "Remove malicious files?"; then
-        BLA::start_loading_animation "${BLA_classic[@]}"
+    BLA_start_loading_animation "${BLA_classic[@]}"
         for file in $malicious_files; do
             if rm -f "$file"; then
                 echo "Removed $file"
@@ -277,16 +280,16 @@ if [[ -n "$malicious_files" ]]; then
                 echo "Failed to remove $file"
             fi
         done
-        BLA::stop_loading_animation
+    BLA_stop_loading_animation
     fi
 fi
 
 if [[ "$has_suspicious_processes" == "True" ]]; then
     wizard_says "Banish those conspiring processes..."
     if prompt_user "Terminate suspicious processes?"; then
-        BLA::start_loading_animation "${BLA_filling_bar[@]}"
+    BLA_start_loading_animation "${BLA_filling_bar[@]}"
         ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs kill -9 2>/dev/null
-        BLA::stop_loading_animation
+    BLA_stop_loading_animation
     fi
 fi
 
@@ -463,7 +466,7 @@ if [[ -n "$encrypted_files" ]]; then
     wizard_says "Attempting to decrypt the detected encrypted files..."
     prompt_user "Proceed with decryption attempts?"
     if [[ $? -eq 0 ]]; then
-        BLA::start_loading_animation "${BLA_filling_bar[@]}"
+    BLA_start_loading_animation "${BLA_filling_bar[@]}"
         for enc_file in $encrypted_files; do
             case "$enc_file" in
                 *.psaux)
@@ -477,7 +480,7 @@ if [[ -n "$encrypted_files" ]]; then
                     ;;
             esac
         done
-        BLA::stop_loading_animation
+    BLA_stop_loading_animation
     fi
 fi
 
