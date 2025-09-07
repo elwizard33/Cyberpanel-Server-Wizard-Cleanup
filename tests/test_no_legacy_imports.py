@@ -1,14 +1,14 @@
 import pathlib, re
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-LEGACY_PATTERN = re.compile(r"from\s+ai_wizard|import\s+ai_wizard")
+LEGACY_PATTERN = re.compile(r"from\s+cyberzard|import\s+cyberzard")
 
 EXEMPT_FILES = {
-    'ai_wizard/__init__.py',  # deprecation shim
+    'cyberzard/__init__.py',  # deprecation shim
     'cyberzard/MIGRATION.md',
 }
 
-def test_no_legacy_ai_wizard_imports():
+def test_no_legacy_cyberzard_imports():
     offenders = []
     for path in PROJECT_ROOT.rglob('*'):
         if path.is_dir():
@@ -25,4 +25,4 @@ def test_no_legacy_ai_wizard_imports():
             continue
         if LEGACY_PATTERN.search(text):
             offenders.append(rel)
-    assert not offenders, f"Legacy ai_wizard imports found: {offenders}"
+    assert not offenders, f"Legacy cyberzard imports found: {offenders}"

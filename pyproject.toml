@@ -44,4 +44,4 @@ build-backend = "setuptools.build_meta"
 [tool.setuptools.packages.find]
 where = ["."]
 include = ["cyberzard*"]
-exclude = ["ai_wizard*", "tests*"]
+exclude = ["cyberzard*", "tests*"]

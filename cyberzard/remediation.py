@@ -1,1 +1,1 @@
-from ai_wizard.remediation import *  # noqa: F401,F403
+from cyberzard.remediation import *  # noqa: F401,F403

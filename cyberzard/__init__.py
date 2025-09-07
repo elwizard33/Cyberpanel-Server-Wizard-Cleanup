@@ -1,6 +1,6 @@
-"""Cyberzard package (renamed from ai_wizard).
+"""Cyberzard package (renamed from cyberzard).
 
-This thin compatibility layer re-exports symbols from the legacy ai_wizard
+This thin compatibility layer re-exports symbols from the legacy cyberzard
 package so existing internal code continues to function while the repository
 is migrated. Future development should target this package path directly.
 """
