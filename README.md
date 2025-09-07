@@ -1,5 +1,7 @@
 # CyberPanel Server Wizard Cleanup Scripts
 
+[![Docs](https://img.shields.io/badge/docs-astro%20site-blue)](https://elwizard33.github.io/Cyberpanel-Server-Wizard-Cleanup/)
+
 ### Overview
 
 These scripts are designed to help identify and clean potential malware and ransomware infections on CyberPanel servers. There are two versions available: the Basic version and the Advanced version. Both perform diagnostics to detect malicious files, suspicious processes, and encrypted files, followed by appropriate cleanup and decryption processes.
@@ -77,4 +79,182 @@ If you do not feel comfortable running these scripts or need further assistance,
 ### Disclaimer
 
 These scripts are provided as-is, without any warranty or guarantee. Use them at your own risk. The author is not responsible for any harm or loss resulting from the use of these scripts. Always ensure your environments are backed up and secure before running any security scripts.
+
+---
+
+# Cyberzard – AI Security CLI for CyberPanel
+
+Cyberzard is the new name for the Python AI-assisted CyberPanel security CLI previously referenced here as the *CyberPanel AI Wizard*. It layers smart scanning, classification, natural‑language explanation, and guided remediation on top of (and beyond) the original bash cleanup scripts.
+
+Current capabilities include modular scanners, severity scoring, remediation planning, evidence preservation hooks, AI provider abstraction (OpenAI / Anthropic / none), ReAct style agent with safe tool schema, advice enrichment, and rich / JSON reporting.
+
+| Capability | Description |
+|------------|-------------|
+| Multi-source scanning | Replicates bash indicators (files, processes, cron, services, users, SSH keys, encrypted files) |
+| Severity scoring | Normalizes findings into Critical/High/Medium/Low with rationale |
+| Evidence preservation | Optional hashing & archiving before destructive actions |
+| Dry-run & planning | Generate remediation plan JSON before executing |
+| AI reasoning (optional) | Summaries, hardening advice, explanation of each finding |
+| ReAct tool loop | Safe tool schema (read/list/search/scan/remediate plan) with sandboxed code execution |
+| JSON + Rich TTY output | Machine-readable reports & human friendly tables |
+
+## Early Development Status
+Core functionality implemented (scanners, reporting, agent, advice enrichment). Packaging and hardening still in progress. Not yet published to PyPI.
+
+## Install (local dev for now)
+Clone repository and install editable with optional extras.
+
+```bash
+git clone https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup.git
+cd Cyberpanel-Server-Wizard-Cleanup
+python -m venv .venv && source .venv/bin/activate
+pip install -e .[openai]      # or .[anthropic]
+```
+
+Entry points: `cyberzard` (preferred) or `cp-ai-wizard` (legacy alias).
+
+## Quick Usage
+
+Scan and pretty print:
+```bash
+cyberzard scan
+```
+
+JSON findings (stable order):
+```bash
+cyberzard scan --json > findings.json
+```
+
+Generate advice (static + AI enrichment if provider configured):
+```bash
+AI_WIZARD_MODEL_PROVIDER=openai OPENAI_API_KEY=sk-... cyberzard advise
+```
+
+Explain findings in natural language:
+```bash
+OPENAI_API_KEY=sk-... cyberzard explain --provider openai
+```
+
+Agent exploratory question (ReAct loop using safe tool schema):
+```bash
+OPENAI_API_KEY=sk-... cyberzard agent "List the most critical suspicious processes and rationale" --steps 4
+```
+
+Remediate (must explicitly allow destructive actions):
+```bash
+cyberzard remediate --delete --kill --preserve
+```
+
+Interactive shell:
+```bash
+cyberzard shell
+```
+
+## Environment Variables
+
+| Variable | Purpose | Default |
+|----------|---------|---------|
+| AI_WIZARD_MODEL_PROVIDER | `openai`, `anthropic`, or `none` | `none` |
+| OPENAI_API_KEY | OpenAI key (if provider=openai) | - |
+| ANTHROPIC_API_KEY | Anthropic key (if provider=anthropic) | - |
+| AI_WIZARD_EVIDENCE_DIR | Evidence / hashing directory | `/var/lib/cp-ai-wizard/evidence` |
+| AI_WIZARD_DRY_RUN | Global dry-run toggle | `true` |
+| AI_WIZARD_PRESERVE_EVIDENCE | Enable evidence preservation | `false` |
+| AI_WIZARD_FORCE | Allow operations outside allowlist (danger) | `false` |
+| AI_WIZARD_SEVERITY_FILTER | Minimum severity (info|low|medium|high|critical) | unset |
+| AI_WIZARD_MAX_CONTEXT_BYTES | AI prompt truncation limit | `8000` |
+| AI_WIZARD_NO_HISTORY | Disable agent step transcript retention | `false` |
+
+If a provider is selected but its API key is missing, degraded (non-AI) mode is used automatically.
+
+## Exit Codes (scan)
+| Code | Meaning |
+|------|---------|
+| 0 | No findings or only info/low |
+| 1 | Contains medium |
+| 2 | Contains high |
+| 3 | Contains critical |
+
+## Current Commands
+
+Auto-generated summary table (see full detailed reference in `docs/commands.md`). Regenerate with:
+
+```bash
+python scripts/generate_command_docs.py
+```
+
+| Command | Description |
+|---------|-------------|
+| scan | Run scanners and output findings (table or JSON) |
+| advise | Show hardening tips (AI enrichment optional) |
+| explain | Natural language summary of findings (AI) |
+| agent | ReAct loop with tool calling for custom question |
+| remediate | Apply limited remediation (explicit flags) |
+| shell | Interactive minimal REPL |
+
+## Safety Model
+Destructive actions (file remove, process kill) remain dry-run unless corresponding flags are passed. Path deletions are constrained to an allowlist unless `AI_WIZARD_FORCE=true` is set. Sandboxed code execution tool performs AST validation and resource limiting. Missing provider credentials never block core scanning.
+
+## Adding New Scanners
+1. Create module in `ai_wizard/scanners/` subclassing `BaseScanner`.
+2. Implement `scan()` returning `List[Finding]`.
+3. Register in `SCANNER_REGISTRY` in `ai_wizard/scanners/__init__.py`.
+4. Include rationale, recommended_action.
+
+## Roadmap Updates
+Planned next steps:
+1. Automated unit tests for scanners & remediation executor.
+2. Packaging polish & initial 0.1.0 release.
+3. Extended composite correlation heuristics.
+4. Persistent caching of previous scans for delta reporting.
+5. Optional YARA integration for file classification.
+
+## Troubleshooting
+| Symptom | Cause | Fix |
+|---------|-------|-----|
+| "SDK not available" message | Provider not installed | Install extras: `pip install .[openai]` |
+| Provider resets to none | Missing API key | Export correct key env var |
+| No destructive actions happen | Dry-run still true | Pass `--delete/--kill` flags or set `AI_WIZARD_DRY_RUN=false` |
+| Advice not enriched | AI disabled | Set provider + key |
+
+## Contributing
+PRs welcome once initial 0.1.0 is cut. Please keep modules cohesive and small, add/update tests for new scanners, and document any new environment variables.
+
+## Development
+```bash
+python -m venv .venv
+source .venv/bin/activate
+pip install -e .[dev,openai]   # or .[dev,anthropic]
+pytest -q
+```
+
+Optional lint (none configured yet) – suggestions:
+* ruff for style/imports
+* mypy for type checking
+
+Run a local scan quickly:
+```bash
+cyberzard scan --json | jq '. | length'
+```
+
+Add a new scanner: follow steps in Adding New Scanners section and include at least one test asserting its output shape.
+
+## Disclaimer
+Prototype software. Validate outputs before acting on them in production. Always maintain off-host backups and snapshots.
+
+## Security Design Highlights
+- Path allowlist & force override requirement
+- Evidence directory with hash + metadata
+- Sandboxed execution: resource limits + AST validation (no imports / open / eval)
+- No autonomous destructive actions without explicit user consent
+
+## Roadmap (abridged)
+1. Core scanners parity with bash (in progress)
+2. Remediation planning + dry-run
+3. Evidence preservation & hashing
+4. AI explanation & advice enrichment
+5. Sandboxed code execution tools
+6. Packaging release 0.1.0
+
+---
 
