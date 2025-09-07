@@ -96,7 +96,7 @@ fi
 
 # Function to prompt user for confirmation
 prompt_user() {
-    read -p "$1 (yes/no) " response
+    read -r -p "$1 (yes/no) " response  # shellcheck disable=SC2162
     if [[ "$response" != "yes" ]]; then
         return 1
     fi
@@ -128,7 +128,8 @@ detect_malicious_files() {
 }
 
 detect_suspicious_processes() {
-    local suspicious=$(ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep')
+    local suspicious
+    suspicious=$(ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep')
     if [[ -n "$suspicious" ]]; then
         echo "True"
     else
@@ -142,22 +143,25 @@ detect_encrypted_files() {
 
 check_for_malicious_users() {
     local suspicious_users=()
-    local known_users=("root" "admin" "ubuntu") 
+    local known_users=("root" "admin" "ubuntu")
     local log_file="/var/log/suspicious_users.log"
 
     # Ensure the log file exists
     touch "$log_file"
 
     # Check for unexpected sudo users
-    local sudo_users=$(getent group sudo | awk -F: '{print $4}' | tr ',' '\n')
+    local sudo_users joined_known_users
+    sudo_users=$(getent group sudo | awk -F: '{print $4}' | tr ',' '\n')
+    joined_known_users=" ${known_users[*]} "
     for user in $sudo_users; do
-        if [[ ! " ${known_users[@]} " =~ " $user " ]]; then
+        if [[ $joined_known_users != *" $user "* ]]; then
             suspicious_users+=("$user")
         fi
     done
 
     # Check for malformed usernames (e.g., usernames with symbols)
-    local all_users=$(getent passwd | cut -d: -f1)
+    local all_users
+    all_users=$(getent passwd | cut -d: -f1)
     for user in $all_users; do
         if [[ "$user" =~ [^a-zA-Z0-9._-] ]]; then
             suspicious_users+=("$user")
@@ -167,16 +171,16 @@ check_for_malicious_users() {
     # Identify users with unexpected UID ranges
     while IFS=: read -r username _ _ uid _; do
         if [[ "$uid" -ge 1000 && "$uid" -le 65533 ]]; then
-            if [[ ! " ${known_users[@]} " =~ " $username " ]]; then
+            if [[ $joined_known_users != *" $username "* ]]; then
                 suspicious_users+=("$username")
             fi
         fi
     done < <(getent passwd)
 
     # Verify suspicious users with the user and log responses
-    echo "Detected possible malicious users: ${suspicious_users[@]}"
+    printf '%s\n' "Detected possible malicious users: ${suspicious_users[*]}"
     for user in "${suspicious_users[@]}"; do
-        read -p "Do you recognize the user '$user'? (yes/no) " response
+        read -r -p "Do you recognize the user '$user'? (yes/no) " response  # shellcheck disable=SC2162
         log_message="User '$user': $response"
         echo "$log_message" | tee -a "$log_file"
 
@@ -202,10 +206,10 @@ check_for_unauthorized_keys() {
     for file in "${key_files[@]}"; do
         if [[ -f "$file" ]]; then
             echo "Checking SSH keys in $file:"
-            while IFS= read -r key; do
+        while IFS= read -r key; do
                 if [[ -n "$key" ]]; then
                     echo "Key found: $key"
-                    read -p "Do you recognize this SSH key? (yes/no) " response
+            read -r -p "Do you recognize this SSH key? (yes/no) " response  # shellcheck disable=SC2162
                     log_message="Key: $key - Recognized: $response"
                     echo "$log_message" | tee -a "$log_file"
 
@@ -249,6 +253,7 @@ wizard_says "Diagnostic complete. Here is what has been discovered:"
 [[ -n "$unauthorized_keys" ]] && echo "- Unauthorized SSH keys detected." || echo "- No unauthorized SSH keys detected."
 
 # Protect if no threats are found
+# If nothing was found, exit early
 if [[ -z "$malicious_files" && "$has_suspicious_processes" == "False" && -z "$encrypted_files" && -z "$suspicious_users" && -z "$unauthorized_keys" ]]; then
     wizard_says "Your server is free from malicious entities detected by our checks. Keep the mystical realms safe by staying updated on CyberPanel forums."
     exit 0
@@ -263,11 +268,14 @@ fi
 # Initiate cleansing based on diagnostic
 if [[ -n "$malicious_files" ]]; then
     wizard_says "Neutralizing detected malicious files..."
-    prompt_user "Remove malicious files?"
-    if [[ $? -eq 0 ]]; then
+    if prompt_user "Remove malicious files?"; then
         BLA::start_loading_animation "${BLA_classic[@]}"
         for file in $malicious_files; do
-            rm -f "$file" && echo "Removed $file" || echo "Failed to remove $file"
+            if rm -f "$file"; then
+                echo "Removed $file"
+            else
+                echo "Failed to remove $file"
+            fi
         done
         BLA::stop_loading_animation
     fi
@@ -275,8 +283,7 @@ fi
 
 if [[ "$has_suspicious_processes" == "True" ]]; then
     wizard_says "Banish those conspiring processes..."
-    prompt_user "Terminate suspicious processes?"
-    if [[ $? -eq 0 ]]; then
+    if prompt_user "Terminate suspicious processes?"; then
         BLA::start_loading_animation "${BLA_filling_bar[@]}"
         ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs kill -9 2>/dev/null
         BLA::stop_loading_animation
@@ -313,7 +320,7 @@ cleanup_kinsing() {
 
         # Delete malware files
         _print_yellow_bg "Step 2: Delete Malware Files"
-        local MALWARE_LOCATIONS=(
+    local MALWARE_LOCATIONS=(
             /etc/data/kinsing
             /etc/kinsing
             /tmp/kdevtmpfsi
@@ -334,13 +341,19 @@ cleanup_kinsing() {
             /var/tmp/.ICEd-unix
         )
 
-        for LOCATION in ${MALWARE_LOCATIONS[@]}; do
-            if [ -f $LOCATION ]; then
-                rm -f $LOCATION
-                [[ $? -eq 0 ]] && _print_success "Deleted $LOCATION" || _print_error "Failed to delete $LOCATION"
-            elif [ -d $LOCATION ]; then
-                rm -rf $LOCATION
-                [[ $? -eq 0 ]] && _print_success "Deleted $LOCATION" || _print_error "Failed to delete $LOCATION"
+        for LOCATION in "${MALWARE_LOCATIONS[@]}"; do
+            if [ -f "$LOCATION" ]; then
+                if rm -f "$LOCATION"; then
+                    _print_success "Deleted $LOCATION"
+                else
+                    _print_error "Failed to delete $LOCATION"
+                fi
+            elif [ -d "$LOCATION" ]; then
+                if rm -rf "$LOCATION"; then
+                    _print_success "Deleted $LOCATION"
+                else
+                    _print_error "Failed to delete $LOCATION"
+                fi
             else
                 _print_running "$LOCATION not found"
             fi
@@ -349,20 +362,19 @@ cleanup_kinsing() {
 
         # Remove suspicious services
         _print_yellow_bg "Step 3: Remove Suspicious Services"
-        local SUSPICIOUS_SERVICES=(
+    local SUSPICIOUS_SERVICES=(
             bot
             system_d
             sshd-network-service
             network-monitor
         )
 
-        for SERVICE in ${SUSPICIOUS_SERVICES[@]}; do
-            systemctl is-active --quiet $SERVICE
-            if [[ $? -eq 0 ]]; then
+        for SERVICE in "${SUSPICIOUS_SERVICES[@]}"; do
+            if systemctl is-active --quiet "$SERVICE"; then
                 _print_error "$SERVICE found"
-                systemctl stop $SERVICE
-                systemctl disable $SERVICE
-                rm -f /etc/systemd/system/$SERVICE.service
+                systemctl stop "$SERVICE"
+                systemctl disable "$SERVICE"
+                rm -f "/etc/systemd/system/$SERVICE.service"
             else
                 _print_success "$SERVICE not found"
             fi
@@ -371,7 +383,7 @@ cleanup_kinsing() {
 
         # Kill suspicious processes
         _print_yellow_bg "Step 4: Kill Suspicious Processes"
-        local SUSPICIOUS_PROCESSES=(
+    local SUSPICIOUS_PROCESSES=(
             kdevtmpfsi
             kinsing
             xmrig
@@ -382,14 +394,17 @@ cleanup_kinsing() {
             xmrigMin...
         )
         
-        for PROCESS_GREP in ${SUSPICIOUS_PROCESSES[@]}; do
-            PIDS_TO_KILL=($(pgrep -f $PROCESS_GREP))
-            PIDS_TO_KILL=(${PIDS_TO_KILL[@]/$$})
+        for PROCESS_GREP in "${SUSPICIOUS_PROCESSES[@]}"; do
+            mapfile -t PIDS_TO_KILL < <(pgrep -f -- "$PROCESS_GREP" 2>/dev/null || true)
+            # Remove current script PID if present
+            for i in "${!PIDS_TO_KILL[@]}"; do
+                [[ ${PIDS_TO_KILL[$i]} -eq $$ ]] && unset 'PIDS_TO_KILL[$i]'
+            done
             if [[ ${#PIDS_TO_KILL[@]} -eq 0 ]]; then
                 _print_success "No $PROCESS_GREP found"
             else
-                for PID in ${PIDS_TO_KILL[@]}; do
-                    kill -9 $PID
+                for PID in "${PIDS_TO_KILL[@]}"; do
+                    kill -9 "$PID" 2>/dev/null || true
                 done
             fi
         done
@@ -407,11 +422,11 @@ cleanup_kinsing() {
         
         # Remove malicious cron jobs
         _print_yellow_bg "Step 6: Remove Malicious Cron Jobs"
-        local CRONTAB_FILES=(
+    local CRONTAB_FILES=(
             /var/spool/cron/crontabs/root
             /var/spool/cron/root
         )
-        local MALICIOUS_MATCH_CRON=(
+    local MALICIOUS_MATCH_CRON=(
             kdevtmpfsi
             unk.sh
             atdb
@@ -420,11 +435,12 @@ cleanup_kinsing() {
             wget
         )
 
-        for CRON_FILE in ${CRONTAB_FILES[@]}; do
-            if [ -f $CRON_FILE ]; then
-                for MATCH in ${MALICIOUS_MATCH_CRON[@]}; do
-                    MATCHED_LINE=$(grep $MATCH $CRON_FILE)
-                    [[ $? -eq 0 ]] && sed -i "/$MATCH/d" $CRON_FILE
+        for CRON_FILE in "${CRONTAB_FILES[@]}"; do
+            if [ -f "$CRON_FILE" ]; then
+                for MATCH in "${MALICIOUS_MATCH_CRON[@]}"; do
+                    if grep -q -- "$MATCH" "$CRON_FILE"; then
+                        sed -i "/$MATCH/d" "$CRON_FILE"
+                    fi
                 done
             else
                 _print_running "$CRON_FILE not found"

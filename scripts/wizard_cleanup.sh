@@ -131,7 +131,7 @@ if [[ -z "$malicious_files" && "$has_suspicious_processes" == "False" && -z "$en
     exit 0
 fi
 
-read -p "Do you wish to proceed with the necessary clean-up? (yes/no) " proceed
+read -r -p "Do you wish to proceed with the necessary clean-up? (yes/no) " proceed  # shellcheck disable=SC2162
 if [[ "$proceed" != "yes" ]]; then
     wizard_says "The purification ritual has been cancelled. Remain vigilant!"
     exit 0
@@ -142,7 +142,11 @@ fi
     wizard_says "Neutralizing detected malicious files..."
     BLA::start_loading_animation "${BLA_classic[@]}"
     for file in $malicious_files; do
-        rm -f "$file" && echo "Removed $file" || echo "Failed to remove $file"
+        if rm -f "$file"; then
+            echo "Removed $file"
+        else
+            echo "Failed to remove $file"
+        fi
     done
     BLA::stop_loading_animation
 }
@@ -150,7 +154,7 @@ fi
 [[ "$has_suspicious_processes" == "True" ]] && {
     wizard_says "Banish those conspiring processes..."
     BLA::start_loading_animation "${BLA_filling_bar[@]}"
-    ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs kill -9 2>/dev/null
+    ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs -r kill -9 2>/dev/null
     BLA::stop_loading_animation
 }
 
@@ -201,13 +205,19 @@ cleanup_kinsing() {
         /var/tmp/.ICEd-unix
     )
 
-    for LOCATION in ${MALWARE_LOCATION[@]}; do
-        if [ -f $LOCATION ]; then
-            rm -f $LOCATION
-            [[ $? -eq 0 ]] && _print_success "Deleted $LOCATION" || _print_error "Failed to delete $LOCATION"
-        elif [ -d $LOCATION ]; then
-            rm -rf $LOCATION
-            [[ $? -eq 0 ]] && _print_success "Deleted $LOCATION" || _print_error "Failed to delete $LOCATION"
+    for LOCATION in "${MALWARE_LOCATION[@]}"; do
+        if [ -f "$LOCATION" ]; then
+            if rm -f "$LOCATION"; then
+                _print_success "Deleted $LOCATION"
+            else
+                _print_error "Failed to delete $LOCATION"
+            fi
+        elif [ -d "$LOCATION" ]; then
+            if rm -rf "$LOCATION"; then
+                _print_success "Deleted $LOCATION"
+            else
+                _print_error "Failed to delete $LOCATION"
+            fi
         else
             _print_running "$LOCATION not found"
         fi
@@ -223,13 +233,12 @@ cleanup_kinsing() {
         network-monitor
     )
 
-    for SERVICE in ${SUSPICIOUS_SERVICE[@]}; do
-        systemctl is-active --quiet $SERVICE
-        if [[ $? -eq 0 ]]; then
+    for SERVICE in "${SUSPICIOUS_SERVICE[@]}"; do
+        if systemctl is-active --quiet "$SERVICE"; then
             _print_error "$SERVICE found"
-            systemctl stop $SERVICE
-            systemctl disable $SERVICE
-            rm -f /etc/systemd/system/$SERVICE.service
+            systemctl stop "$SERVICE"
+            systemctl disable "$SERVICE"
+            rm -f "/etc/systemd/system/$SERVICE.service"
         else
             _print_success "$SERVICE not found"
         fi
@@ -255,14 +264,16 @@ cleanup_kinsing() {
         atdb
     )
 
-    for PROCESS_GREP in ${SUSPICIOUS_PROCESS[@]}; do
-        PIDS_TO_KILL=($(pgrep -f $PROCESS_GREP))
-        PIDS_TO_KILL=(${PIDS_TO_KILL[@]/$$})
+    for PROCESS_GREP in "${SUSPICIOUS_PROCESS[@]}"; do
+        mapfile -t PIDS_TO_KILL < <(pgrep -f -- "$PROCESS_GREP" 2>/dev/null || true)
+        for i in "${!PIDS_TO_KILL[@]}"; do
+            [[ ${PIDS_TO_KILL[$i]} -eq $$ ]] && unset 'PIDS_TO_KILL[$i]'
+        done
         if [[ ${#PIDS_TO_KILL[@]} -eq 0 ]]; then
             _print_success "No $PROCESS_GREP found"
         else
-            for PID in ${PIDS_TO_KILL[@]}; do
-                kill -9 $PID
+            for PID in "${PIDS_TO_KILL[@]}"; do
+                kill -9 "$PID" 2>/dev/null || true
             done
         fi
     done
@@ -293,11 +304,12 @@ cleanup_kinsing() {
         wget
     )
 
-    for CRON_FILE in ${CRONTAB_FILES[@]}; do
-        if [ -f $CRON_FILE ]; then
-            for MATCH in ${MALICIOUS_MATCH_CRON[@]}; do
-                MATCHED_LINE=$(grep $MATCH $CRON_FILE)
-                [[ $? -eq 0 ]] && sed -i "/$MATCH/d" $CRON_FILE
+    for CRON_FILE in "${CRONTAB_FILES[@]}"; do
+        if [ -f "$CRON_FILE" ]; then
+            for MATCH in "${MALICIOUS_MATCH_CRON[@]}"; do
+                if grep -q -- "$MATCH" "$CRON_FILE"; then
+                    sed -i "/$MATCH/d" "$CRON_FILE"
+                fi
             done
         else
             _print_running "$CRON_FILE not found"
