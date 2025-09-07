@@ -138,7 +138,7 @@ if [[ "$proceed" != "yes" ]]; then
 fi
 
 # Initiate cleansing based on diagnostic
-[[ -n "$malicious_files" ]] && {
+if [[ -n "$malicious_files" ]]; then
     wizard_says "Neutralizing detected malicious files..."
     BLA_start_loading_animation "${BLA_classic[@]}"
     for file in $malicious_files; do
@@ -149,14 +149,17 @@ fi
         fi
     done
     BLA_stop_loading_animation
-}
+fi
 
-[[ "$has_suspicious_processes" == "True" ]] && {
+if [[ "$has_suspicious_processes" == "True" ]]; then
     wizard_says "Banish those conspiring processes..."
     BLA_start_loading_animation "${BLA_filling_bar[@]}"
-    ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs -r kill -9 2>/dev/null
+    mapfile -t _pids < <(pgrep -f 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' 2>/dev/null || true)
+    if ((${#_pids[@]})); then
+        kill -9 "${_pids[@]}" 2>/dev/null || true
+    fi
     BLA_stop_loading_animation
-}
+fi
 
 # New Kinsing-specific cleanup adapted to wizard theme
 cleanup_kinsing() {

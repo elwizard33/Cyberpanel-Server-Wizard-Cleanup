@@ -245,8 +245,8 @@ BLA_start_loading_animation "${BLA_filling_bar[@]}"
 malicious_files=$(detect_malicious_files)
 has_suspicious_processes=$(detect_suspicious_processes)
 encrypted_files=$(detect_encrypted_files)
-suspicious_users=$(check_for_malicious_users)
-unauthorized_keys=$(check_for_unauthorized_keys)
+suspicious_users_array=($(check_for_malicious_users))
+unauthorized_keys_array=($(check_for_unauthorized_keys))
 BLA_stop_loading_animation
 
 # Diagnostic results display
@@ -255,18 +255,25 @@ wizard_says "Diagnostic complete. Here is what has been discovered:"
 [[ -n "$malicious_files" ]] && echo "- Malicious files detected: $malicious_files" || echo "- No malicious files detected."
 [[ "$has_suspicious_processes" == "True" ]] && echo "- Suspicious processes detected." || echo "- No suspicious processes detected."
 [[ -n "$encrypted_files" ]] && echo "- Encrypted files detected." || echo "- No encrypted files detected."
-[[ -n "$suspicious_users" ]] && echo "- Suspicious users detected: $suspicious_users" || echo "- No suspicious users detected."
-[[ -n "$unauthorized_keys" ]] && echo "- Unauthorized SSH keys detected." || echo "- No unauthorized SSH keys detected."
+if ((${#suspicious_users_array[@]})); then
+    printf -- '- Suspicious users detected: %s\n' "${suspicious_users_array[*]}"
+else
+    echo "- No suspicious users detected."
+fi
+if ((${#unauthorized_keys_array[@]})); then
+    echo "- Unauthorized SSH keys detected."
+else
+    echo "- No unauthorized SSH keys detected."
+fi
 
 # Protect if no threats are found
 # If nothing was found, exit early
-if [[ -z "$malicious_files" && "$has_suspicious_processes" == "False" && -z "$encrypted_files" && -z "$suspicious_users" && -z "$unauthorized_keys" ]]; then
+if [[ -z "$malicious_files" && "$has_suspicious_processes" == "False" && -z "$encrypted_files" && ${#suspicious_users_array[@]} -eq 0 && ${#unauthorized_keys_array[@]} -eq 0 ]]; then
     wizard_says "Your server is free from malicious entities detected by our checks. Keep the mystical realms safe by staying updated on CyberPanel forums."
     exit 0
 fi
 
-prompt_user "Do you wish to proceed with the necessary clean-up?"
-if [[ $? -ne 0 ]]; then
+if ! prompt_user "Do you wish to proceed with the necessary clean-up?"; then
     wizard_says "The purification ritual has been cancelled. Remain vigilant!"
     exit 0
 fi
