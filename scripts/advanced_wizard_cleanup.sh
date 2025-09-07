@@ -179,10 +179,12 @@ check_for_malicious_users() {
     done < <(getent passwd)
 
     # Verify suspicious users with the user and log responses
-    printf '%s\n' "Detected possible malicious users: ${suspicious_users[*]}"
+    if ((${#suspicious_users[@]})); then
+        echo "Detected possible malicious users:"
+    fi
     for user in "${suspicious_users[@]}"; do
-    # shellcheck disable=SC2162
-    read -r -p "Do you recognize the user '$user'? (yes/no) " response
+        # shellcheck disable=SC2162
+        read -r -p "Do you recognize the user '$user'? (yes/no) " response
         log_message="User '$user': $response"
         echo "$log_message" | tee -a "$log_file"
 
