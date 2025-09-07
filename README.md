@@ -86,6 +86,19 @@ These scripts are provided as-is, without any warranty or guarantee. Use them at
 
 Cyberzard is the new name for the Python AI-assisted CyberPanel security CLI previously referenced here as the *CyberPanel AI Wizard*. It layers smart scanning, classification, natural‑language explanation, and guided remediation on top of (and beyond) the original bash cleanup scripts.
 
+> ⚠️ **Experimental Preview**: Cyberzard is in an early, fast‑moving experimental phase. Interfaces may change without notice until the first tagged release (0.1.0). Core scanning logic is reasonably stable; remediation, AI enrichment flows, and packaging are still being hardened. Use in production only with caution and backups.
+
+### Try It & Give Feedback
+You are invited to test Cyberzard locally and open high‑quality issues for:
+* Incorrect / missed detections
+* False positives (with rationale & environment details)
+* UX or clarity problems in output
+* Performance bottlenecks on larger file sets
+* Security hardening or sandbox escape concerns
+* Feature requests (clearly framed problem statements)
+
+Before filing, please read the [Issue Reporting Guide](ISSUE_GUIDE.md) – it explains required fields, reproduction standards, and security disclosure handling. Polished reports accelerate fixes dramatically.
+
 Current capabilities include modular scanners, severity scoring, remediation planning, evidence preservation hooks, AI provider abstraction (OpenAI / Anthropic / none), ReAct style agent with safe tool schema, advice enrichment, and rich / JSON reporting.
 
 | Capability | Description |
@@ -127,7 +140,7 @@ cyberzard scan --json > findings.json
 
 Generate advice (static + AI enrichment if provider configured):
 ```bash
-AI_WIZARD_MODEL_PROVIDER=openai OPENAI_API_KEY=sk-... cyberzard advise
+CYBERZARD_MODEL_PROVIDER=openai OPENAI_API_KEY=sk-... cyberzard advise
 ```
 
 Explain findings in natural language:
@@ -154,16 +167,16 @@ cyberzard shell
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
-| AI_WIZARD_MODEL_PROVIDER | `openai`, `anthropic`, or `none` | `none` |
+| CYBERZARD_MODEL_PROVIDER | `openai`, `anthropic`, or `none` | `none` |
 | OPENAI_API_KEY | OpenAI key (if provider=openai) | - |
 | ANTHROPIC_API_KEY | Anthropic key (if provider=anthropic) | - |
-| AI_WIZARD_EVIDENCE_DIR | Evidence / hashing directory | `/var/lib/cyberzard/evidence` |
-| AI_WIZARD_DRY_RUN | Global dry-run toggle | `true` |
-| AI_WIZARD_PRESERVE_EVIDENCE | Enable evidence preservation | `false` |
-| AI_WIZARD_FORCE | Allow operations outside allowlist (danger) | `false` |
-| AI_WIZARD_SEVERITY_FILTER | Minimum severity (info|low|medium|high|critical) | unset |
-| AI_WIZARD_MAX_CONTEXT_BYTES | AI prompt truncation limit | `8000` |
-| AI_WIZARD_NO_HISTORY | Disable agent step transcript retention | `false` |
+| CYBERZARD_EVIDENCE_DIR | Evidence / hashing directory | `/var/lib/cyberzard/evidence` |
+| CYBERZARD_DRY_RUN | Global dry-run toggle | `true` |
+| CYBERZARD_PRESERVE_EVIDENCE | Enable evidence preservation | `false` |
+| CYBERZARD_FORCE | Allow operations outside allowlist (danger) | `false` |
+| CYBERZARD_SEVERITY_FILTER | Minimum severity (info|low|medium|high|critical) | unset |
+| CYBERZARD_MAX_CONTEXT_BYTES | AI prompt truncation limit | `8000` |
+| CYBERZARD_NO_HISTORY | Disable agent step transcript retention | `false` |
 
 If a provider is selected but its API key is missing, degraded (non-AI) mode is used automatically.
 
@@ -193,12 +206,12 @@ python scripts/generate_command_docs.py
 | shell | Interactive minimal REPL |
 
 ## Safety Model
-Destructive actions (file remove, process kill) remain dry-run unless corresponding flags are passed. Path deletions are constrained to an allowlist unless `AI_WIZARD_FORCE=true` is set. Sandboxed code execution tool performs AST validation and resource limiting. Missing provider credentials never block core scanning.
+Destructive actions (file remove, process kill) remain dry-run unless corresponding flags are passed. Path deletions are constrained to an allowlist unless `CYBERZARD_FORCE=true` is set. Sandboxed code execution tool performs AST validation and resource limiting. Missing provider credentials never block core scanning.
 
 ## Adding New Scanners
-1. Create module in `ai_wizard/scanners/` subclassing `BaseScanner`.
+1. Create module in `cyberzard/scanners/` subclassing `BaseScanner`.
 2. Implement `scan()` returning `List[Finding]`.
-3. Register in `SCANNER_REGISTRY` in `ai_wizard/scanners/__init__.py`.
+3. Register in `SCANNER_REGISTRY` in `cyberzard/scanners/__init__.py`.
 4. Include rationale, recommended_action.
 
 ## Roadmap Updates
@@ -214,7 +227,7 @@ Planned next steps:
 |---------|-------|-----|
 | "SDK not available" message | Provider not installed | Install extras: `pip install .[openai]` |
 | Provider resets to none | Missing API key | Export correct key env var |
-| No destructive actions happen | Dry-run still true | Pass `--delete/--kill` flags or set `AI_WIZARD_DRY_RUN=false` |
+| No destructive actions happen | Dry-run still true | Pass `--delete/--kill` flags or set `CYBERZARD_DRY_RUN=false` |
 | Advice not enriched | AI disabled | Set provider + key |
 
 ## Contributing
