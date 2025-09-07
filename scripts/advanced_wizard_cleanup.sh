@@ -228,8 +228,11 @@ check_for_unauthorized_keys() {
         fi
     done
 
-    if [[ ${#unauthorized_keys[@]} -gt 0 ]]; then
-        echo "Unauthorized keys detected: ${unauthorized_keys[@]}"
+    if (( ${#unauthorized_keys[@]} )); then
+        echo "Unauthorized keys detected:" 
+        for k in "${unauthorized_keys[@]}"; do
+            echo "  - $k"
+        done
         echo "Consider removing these keys if they're not recognized by administrators."
     else
         echo "All SSH keys verified as recognized."

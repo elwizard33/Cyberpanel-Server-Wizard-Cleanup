@@ -131,7 +131,8 @@ if [[ -z "$malicious_files" && "$has_suspicious_processes" == "False" && -z "$en
     exit 0
 fi
 
-read -r -p "Do you wish to proceed with the necessary clean-up? (yes/no) " proceed  # shellcheck disable=SC2162
+# shellcheck disable=SC2162
+read -r -p "Do you wish to proceed with the necessary clean-up? (yes/no) " proceed
 if [[ "$proceed" != "yes" ]]; then
     wizard_says "The purification ritual has been cancelled. Remain vigilant!"
     exit 0
