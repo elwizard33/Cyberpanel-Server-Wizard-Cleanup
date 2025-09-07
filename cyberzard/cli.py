@@ -48,5 +48,10 @@ def version() -> None:
     typer.echo("cyberzard version 0.1.0")
 
 
-if __name__ == "__main__":
+def main():
+    """Main entry point for the CLI."""
     app()
+
+
+if __name__ == "__main__":
+    main()
