@@ -1,6 +1,6 @@
 # CyberPanel Server Wizard Cleanup Scripts
 
-[![Docs](https://img.shields.io/badge/docs-astro%20site-blue)](https://elwizard33.github.io/Cyberpanel-Server-Wizard-Cleanup/)
+[![Docs](https://img.shields.io/badge/docs-astro%20site-blue)](https://elwizard33.github.io/Cyberzard/)
 
 ### Overview
 
@@ -50,13 +50,13 @@ These scripts are designed to help identify and clean potential malware and rans
 You can directly download and execute the **Basic** version of the script using the following command:
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup/refs/heads/main/scripts/wizard_cleanup.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/refs/heads/main/scripts/wizard_cleanup.sh)"
 ```
 
 For the **Advanced** version, use this command:
 
 ```bash
-sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup/refs/heads/main/scripts/advanced_wizard_cleanup.sh)"
+sudo bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/refs/heads/main/scripts/advanced_wizard_cleanup.sh)"
 ```
 
 ### Support
@@ -118,8 +118,8 @@ Core functionality implemented (scanners, reporting, agent, advice enrichment). 
 Clone repository and install editable with optional extras.
 
 ```bash
-git clone https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup.git
-cd Cyberpanel-Server-Wizard-Cleanup
+git clone https://github.com/elwizard33/Cyberzard.git
+cd Cyberzard
 python -m venv .venv && source .venv/bin/activate
 pip install -e .[openai]      # or .[anthropic]
 ```
