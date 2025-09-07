@@ -100,8 +100,7 @@ detect_malicious_files() {
 }
 
 detect_suspicious_processes() {
-    local suspicious=$(ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep')
-    if [[ -n "$suspicious" ]]; then
+    if pgrep -fa 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' >/dev/null 2>&1; then
         echo "True"
     else
         echo "False"

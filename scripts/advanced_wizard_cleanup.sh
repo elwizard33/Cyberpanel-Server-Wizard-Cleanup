@@ -129,9 +129,7 @@ detect_malicious_files() {
 }
 
 detect_suspicious_processes() {
-    local suspicious
-    suspicious=$(ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep')
-    if [[ -n "$suspicious" ]]; then
+    if pgrep -fa 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' >/dev/null 2>&1; then
         echo "True"
     else
         echo "False"
@@ -293,7 +291,11 @@ if [[ "$has_suspicious_processes" == "True" ]]; then
     wizard_says "Banish those conspiring processes..."
     if prompt_user "Terminate suspicious processes?"; then
     BLA_start_loading_animation "${BLA_filling_bar[@]}"
-        ps -aux | grep -E 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' | grep -v 'grep' | awk '{print $2}' | xargs kill -9 2>/dev/null
+        # Use pgrep directly for process IDs
+        mapfile -t _pids < <(pgrep -f 'kinsing|udiskssd|kdevtmpfsi|bash2|syshd|atdb' 2>/dev/null || true)
+        if ((${#_pids[@]})); then
+            kill -9 "${_pids[@]}" 2>/dev/null || true
+        fi
     BLA_stop_loading_animation
     fi
 fi
