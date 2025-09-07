@@ -1,7 +1,7 @@
 import pathlib, re
 
 PROJECT_ROOT = pathlib.Path(__file__).resolve().parent.parent
-LEGACY_PATTERN = re.compile(r"from\s+cyberzard|import\s+cyberzard")
+LEGACY_PATTERN = re.compile(r"from\s+ai_wizard|import\s+ai_wizard")
 
 EXEMPT_FILES = {
     'cyberzard/__init__.py',  # deprecation shim

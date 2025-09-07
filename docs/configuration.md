@@ -25,7 +25,9 @@ Runtime behavior is controlled primarily through environment variables. This pag
 Settings are read lazily the first time `get_settings()` is invoked and are cached (LRU with size 1). To re-evaluate environment variables within the same Python process you would need to clear the cache (advanced / dev scenario):
 
 ```python
-from cyberzard.config import get_settings
+from cyberzard.config import CyberzardConfig
+
+config = CyberzardConfig()
 get_settings.cache_clear()  # then call get_settings() again
 ```
 
