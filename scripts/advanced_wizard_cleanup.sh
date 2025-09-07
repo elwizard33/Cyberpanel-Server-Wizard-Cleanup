@@ -245,8 +245,8 @@ BLA_start_loading_animation "${BLA_filling_bar[@]}"
 malicious_files=$(detect_malicious_files)
 has_suspicious_processes=$(detect_suspicious_processes)
 encrypted_files=$(detect_encrypted_files)
-suspicious_users_array=($(check_for_malicious_users))
-unauthorized_keys_array=($(check_for_unauthorized_keys))
+mapfile -t suspicious_users_array < <(check_for_malicious_users)
+mapfile -t unauthorized_keys_array < <(check_for_unauthorized_keys)
 BLA_stop_loading_animation
 
 # Diagnostic results display
@@ -323,7 +323,7 @@ cleanup_kinsing() {
     echo
 
     prompt_user "Proceed with the Kinsing malware cleaning steps?"
-    if [[ $? -eq 0 ]]; then
+    if prompt_user "Proceed with the Kinsing malware cleaning steps?"; then
     
         # Start cleanup
         _print_yellow_bg "Proceeding to clean Kinsing malware from system"
@@ -331,8 +331,11 @@ cleanup_kinsing() {
 
         # Disable cron
         _print_yellow_bg "Step 1: Disable cron"
-        systemctl stop cron
-        [[ $? -eq 0 ]] && _print_success "Cron service stopped" || _print_error "Failed to stop cron service"
+        if systemctl stop cron; then
+            _print_success "Cron service stopped"
+        else
+            _print_error "Failed to stop cron service"
+        fi
         echo
 
         # Delete malware files
@@ -430,8 +433,11 @@ cleanup_kinsing() {
         # Unload pre-loaded libraries
         _print_yellow_bg "Step 5: Unload pre-loaded libraries"
         if [ -f /etc/ld.so.preload ]; then
-            rm -f /etc/ld.so.preload
-            [[ $? -eq 0 ]] && _print_success "Deleted /etc/ld.so.preload" || _print_error "Failed to delete /etc/ld.so.preload"
+            if rm -f /etc/ld.so.preload; then
+                _print_success "Deleted /etc/ld.so.preload"
+            else
+                _print_error "Failed to delete /etc/ld.so.preload"
+            fi
         else
             _print_success "/etc/ld.so.preload not found"
         fi
@@ -466,8 +472,11 @@ cleanup_kinsing() {
         
         # Start cron
         _print_yellow_bg "Step 8: Start Cron"
-        systemctl start cron
-        [[ $? -eq 0 ]] && _print_success "Cron service started" || _print_error "Failed to start cron service"
+        if systemctl start cron; then
+            _print_success "Cron service started"
+        else
+            _print_error "Failed to start cron service"
+        fi
         echo
     fi
 }
@@ -478,8 +487,7 @@ fi
 
 if [[ -n "$encrypted_files" ]]; then
     wizard_says "Attempting to decrypt the detected encrypted files..."
-    prompt_user "Proceed with decryption attempts?"
-    if [[ $? -eq 0 ]]; then
+    if prompt_user "Proceed with decryption attempts?"; then
     BLA_start_loading_animation "${BLA_filling_bar[@]}"
         for enc_file in $encrypted_files; do
             case "$enc_file" in

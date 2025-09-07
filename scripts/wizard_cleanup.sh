@@ -181,8 +181,11 @@ cleanup_kinsing() {
 
     # Disable cron
     _print_yellow_bg "Step 1: Disable cron"
-    systemctl stop cron
-    [[ $? -eq 0 ]] && _print_success "Cron service stopped" || _print_error "Failed to stop cron service"
+    if systemctl stop cron; then
+        _print_success "Cron service stopped"
+    else
+        _print_error "Failed to stop cron service"
+    fi
     echo
 
     # Delete malware files
@@ -285,8 +288,11 @@ cleanup_kinsing() {
     # Unload pre-loaded libraries
     _print_yellow_bg "Step 5: Unload pre-loaded libraries"
     if [ -f /etc/ld.so.preload ]; then
-        rm -f /etc/ld.so.preload
-        [[ $? -eq 0 ]] && _print_success "Deleted /etc/ld.so.preload" || _print_error "Failed to delete /etc/ld.so.preload"
+        if rm -f /etc/ld.so.preload; then
+            _print_success "Deleted /etc/ld.so.preload"
+        else
+            _print_error "Failed to delete /etc/ld.so.preload"
+        fi
     else
         _print_success "/etc/ld.so.preload not found"
     fi
@@ -321,8 +327,11 @@ cleanup_kinsing() {
 
     # Start cron
     _print_yellow_bg "Step 8: Start Cron"
-    systemctl start cron
-    [[ $? -eq 0 ]] && _print_success "Cron service started" || _print_error "Failed to start cron service"
+    if systemctl start cron; then
+        _print_success "Cron service started"
+    else
+        _print_error "Failed to start cron service"
+    fi
     echo
 }
 
