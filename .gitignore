@@ -25,3 +25,4 @@ dist/
 
 # Misc
 .DS_Store
+docs/site/node_modules/
