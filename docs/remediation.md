@@ -1,9 +1,11 @@
 ---
-title: Remediation Workflow
+title: (Legacy) Remediation Workflow
 ---
-# Remediation Workflow
+## Legacy Documentation Notice
 
-The remediation subsystem applies a constrained, auditable subset of actions derived from scan findings. It is intentionally conservative to avoid collateral damage.
+Moved to Starlight at `/remediation`.
+
+Original content removed.
 
 ## 1. Scan to Action Mapping
 

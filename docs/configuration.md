@@ -1,9 +1,11 @@
 ---
-title: Configuration
+title: (Legacy) Configuration
 ---
-# Configuration
+## Legacy Documentation Notice
 
-Runtime behavior is controlled primarily through environment variables. This page lists all supported variables, their defaults, and effects.
+Moved to Starlight at `/configuration`.
+
+Original content removed.
 
 ## 1. Environment Variables
 

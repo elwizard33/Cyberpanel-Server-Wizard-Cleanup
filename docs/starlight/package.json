@@ -1,0 +1,17 @@
+{
+  "name": "cyberzard-docs-starlight",
+  "type": "module",
+  "private": true,
+  "version": "0.0.1",
+  "scripts": {
+    "dev": "astro dev",
+    "build": "astro build",
+    "preview": "astro preview",
+    "astro": "astro"
+  },
+  "dependencies": {
+    "@astrojs/starlight": "^0.25.0",
+    "astro": "^4.15.0",
+    "typescript": "^5.4.0"
+  }
+}

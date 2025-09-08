@@ -1,9 +1,11 @@
 ---
-title: AI & Agent
+title: (Legacy) AI & Agent
 ---
-# AI & Agent
+## Legacy Documentation Notice
 
-This section explains how AI functionality is integrated: optional enrichment of findings/advice, explanation summarization, and the interactive reasoning agent.
+Moved to Starlight at `/ai-and-agent`.
+
+Original content removed to avoid duplication.
 
 ## 1. Provider Abstraction Overview
 

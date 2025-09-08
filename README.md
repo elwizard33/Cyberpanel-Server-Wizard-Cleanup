@@ -262,6 +262,9 @@ Prototype software. Validate outputs before acting on them in production. Always
 - No autonomous destructive actions without explicit user consent
 
 ## Roadmap (abridged)
+See the full evolving plan in [ROADMAP.md](./ROADMAP.md).
+
+Current focus highlights:
 1. Core scanners parity with bash (in progress)
 2. Remediation planning + dry-run
 3. Evidence preservation & hashing

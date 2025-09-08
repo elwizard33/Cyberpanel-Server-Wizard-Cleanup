@@ -1,9 +1,11 @@
 ---
-title: Security Model
+title: (Legacy) Security Model
 ---
-# Security Model
+## Legacy Documentation Notice
 
-Security posture is guided by a conservative principle set aimed at preventing the tool itself from becoming an additional risk while operating on potentially compromised systems.
+Moved to Starlight at `/security`.
+
+Original content removed.
 
 ## 1. Principles
 

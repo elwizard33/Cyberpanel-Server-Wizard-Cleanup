@@ -1,9 +1,11 @@
 ---
-title: System Architecture
+title: (Legacy) System Architecture
 ---
-# System Architecture
+## Legacy Documentation Notice
 
-This document describes major components, their responsibilities, and the end‑to‑end flow across scanning, reporting, AI reasoning, and remediation.
+Moved to Starlight at `/architecture`.
+
+Original content removed.
 
 ## 1. High-Level Component Map (Textual)
 

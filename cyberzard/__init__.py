@@ -1,3 +1,6 @@
+__all__ = ["run_agent"]
+
+from .agent import run_agent  # noqa: E402
 """Cyberzard package (renamed from cyberzard).
 
 This thin compatibility layer re-exports symbols from the legacy cyberzard

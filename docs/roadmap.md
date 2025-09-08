@@ -1,9 +1,11 @@
 ---
-title: Project Roadmap
+title: (Legacy) Project Roadmap
 ---
-# Project Roadmap
+## Legacy Documentation Notice
 
-This roadmap outlines phased development goals. Timelines are indicative and may adjust based on community feedback and security priority shifts.
+Moved to Starlight at `/roadmap`.
+
+Original content removed.
 
 ## 1. Near Term (0.1.x → 0.2.0)
 

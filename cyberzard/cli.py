@@ -1,3 +1,46 @@
+from __future__ import annotations
+
+import json
+import typer
+
+from .agent import run_agent, SYSTEM_PROMPT
+
+app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
+
+
+@app.command()
+def assistant(
+    query: str = typer.Argument(..., help="Instruction or question for the assistant"),
+    max_steps: int = typer.Option(5, help="Max internal reasoning/tool steps"),
+    show_plan: bool = typer.Option(False, help="Show full reasoning JSON output"),
+):
+    result = run_agent(user_query=query, max_steps=max_steps)
+    if show_plan:
+        typer.echo(json.dumps(result, indent=2))
+    else:
+        typer.echo(result.get("final"))
+
+
+@app.command()
+def scan(include_encrypted: bool = typer.Option(True, help="Detect encrypted extension candidates")):
+    result = run_agent(user_query="scan", max_steps=3)
+    if result.get("remediation_plan"):
+        typer.echo(json.dumps(result["remediation_plan"], indent=2))
+    else:
+        typer.echo("No remediation plan produced.")
+
+
+@app.command("show-prompt")
+def show_prompt():
+    typer.echo(SYSTEM_PROMPT)
+
+
+def main():  # pragma: no cover
+    app()
+
+
+if __name__ == "__main__":  # pragma: no cover
+    main()
 """Command-line interface for cyberzard."""
 
 import typer

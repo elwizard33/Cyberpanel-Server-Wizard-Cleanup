@@ -1,9 +1,11 @@
 ---
-title: FAQ
+title: (Legacy) FAQ
 ---
-# FAQ
+## Legacy Documentation Notice
 
-> Have a question not covered here? Open an issue or submit a PR. (Future docs site will surface an "Edit this page" button.)
+Moved to Starlight at `/faq`.
+
+Original content removed.
 
 ## 1. Why another CyberPanel cleanup / scanner tool?
 

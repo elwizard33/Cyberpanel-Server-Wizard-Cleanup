@@ -1,17 +1,19 @@
 ---
-title: Installation
+title: (Legacy) Installation
 ---
-# Installation
+# Legacy Documentation Notice
 
-This guide shows how to install, upgrade, and remove the CyberPanel AI Wizard CLI.
+This file has moved to the Starlight documentation site.
+
+Please visit: `/installation` in the generated docs (built from `docs/starlight`).
+
+Content deprecated here to avoid divergence.
 
 ## 1. Requirements
 
 Minimum:
 
-- Python 3.10 or 3.11
-- Linux (primary target) or macOS for development
-- Network egress (only required if using AI providers)
+*Content removed – see Starlight page.*
 
 Recommended for production scanning:
 

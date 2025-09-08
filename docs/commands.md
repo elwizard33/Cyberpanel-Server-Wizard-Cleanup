@@ -1,42 +1,11 @@
 ---
-title: Commands Reference
+title: (Legacy) Commands Reference
 ---
-# Commands Reference
+## Legacy Documentation Notice
 
-This section documents each CLI command exposed by the entry point `cp-ai-wizard`.
+This page has moved to the Starlight documentation site at `/commands`.
 
-Global notes:
-
-- All commands are safe by default (no destructive operations without explicit flags).
-- Rich colored tables are used when output is a TTY; use `--json` for machine output where supported.
-- Exit codes communicate presence of higher-severity findings (`scan` only for now).
-
-## scan
-
-Run all scanners and display aggregated findings.
-
-Synopsis:
-
-```bash
-cp-ai-wizard scan [--json] [-v ...] [--exit-code / --no-exit-code]
-```
-
-Options:
-
-| Option | Type | Default | Description |
-|--------|------|---------|-------------|
-| `--json` | flag | false | Emit JSON: `{findings: [...], delta:{added:[],removed:[]}}` |
-| `-v` (repeatable) | count | 0 | Increase logging verbosity (currently minimal placeholder) |
-| `--exit-code/--no-exit-code` | boolean toggle | `--exit-code` | Whether to set process exit code based on highest severity |
-
-Exit Codes (when `--exit-code` active):
-
-| Code | Meaning |
-|------|---------|
-| 0 | No findings OR only info/low |
-| 1 | At least one medium finding |
-| 2 | At least one high finding (no critical) |
-| 3 | At least one critical finding |
+Content deprecated here to prevent divergence. Consult the generated site for up‑to‑date command details.
 
 Examples:
 

@@ -1,4 +1,4 @@
-name: Deploy to GitHub Pages
+name: Deploy Starlight Docs to GitHub Pages
 
 on:
   push:
@@ -16,14 +16,26 @@ permissions:
 jobs:
   build:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: docs/starlight
     steps:
-      - name: Checkout your repository using git
+      - name: Checkout repository
         uses: actions/checkout@v4
-      - name: Install, build, and upload your site
-        uses: withastro/action@v3
+      - name: Setup Node
+        uses: actions/setup-node@v4
         with:
-          path: docs/site
           node-version: 20
+          cache: 'npm'
+          cache-dependency-path: docs/starlight/package-lock.json
+      - name: Install dependencies
+        run: npm ci || npm install
+      - name: Build site
+        run: npm run build
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: docs/starlight/dist
 
   deploy:
     needs: build
