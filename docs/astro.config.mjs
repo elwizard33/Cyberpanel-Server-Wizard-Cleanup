@@ -14,12 +14,7 @@ export default defineConfig({
       title: 'Cyberzard Docs',
       description: 'AI-assisted CyberPanel security CLI documentation',
       social: { github: 'https://github.com/elwizard33/Cyberzard' },
-      sidebar: [
-        {
-          label: 'Guide',
-          autogenerate: { directory: '.' }
-        }
-      ]
+  // Let Starlight auto-generate the sidebar from all docs in src/content/docs
     })
   ]
 });
