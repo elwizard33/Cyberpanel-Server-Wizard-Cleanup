@@ -1,8 +1,0 @@
----
-import DocsLayout from '../layouts/DocsLayout.astro';
-import fs from 'node:fs';
-const content = fs.readFileSync(new URL('../../../../docs/roadmap.md', import.meta.url), 'utf8');
----
-<DocsLayout title="Project Roadmap">
-  <pre style="white-space:pre-wrap;">{content}</pre>
-</DocsLayout>
