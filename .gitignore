@@ -27,3 +27,7 @@ dist/
 .DS_Store
 .shrimp-data/
 docs/node_modules/
+docs/.astro/
+docs/dist/
+docs/site/
+docs/starlight/
