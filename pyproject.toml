@@ -22,9 +22,9 @@ dependencies = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup"
-Source = "https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup"
-Issues = "https://github.com/elwizard33/Cyberpanel-Server-Wizard-Cleanup/issues"
+Homepage = "https://elwizard33.github.io/Cyberzard"
+Source = "https://elwizard33.github.io/Cyberzard"
+Issues = "https://elwizard33.github.io/Cyberzard/issues"
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.29.0"]

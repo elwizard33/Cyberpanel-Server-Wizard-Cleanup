@@ -16,5 +16,5 @@ Cyberzard accelerates incident triage by combining deterministic scanners (proce
 | AI Assist | Summaries, prioritization | Provider optional (offline safe) |
 | Safety | Tool allowlist, step cap | No raw shell exposed |
 
-Next: Read the [Installation](/installation) page.
+Next: Read the [Installation](./installation) page.
 

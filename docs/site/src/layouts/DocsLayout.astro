@@ -1,0 +1,38 @@
+---
+const { title = 'CyberPanel AI Wizard Docs' } = Astro.props;
+---
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>{title}</title>
+    <link rel="stylesheet" href="https://unpkg.com/@picocss/pico@2/css/pico.min.css" />
+  </head>
+  <body>
+    <header style="padding:1rem;">
+      <h1 style="margin:0;font-size:1.4rem;">CyberPanel AI Wizard</h1>
+      <nav>
+        <ul style="display:flex;gap:0.75rem;flex-wrap:wrap;font-size:0.9rem;">
+          <li><a href="/Cyberzard/">Home</a></li>
+          <li><a href="/Cyberzard/installation">Installation</a></li>
+          <li><a href="/Cyberzard/configuration">Configuration</a></li>
+          <li><a href="/Cyberzard/commands">Commands</a></li>
+          <li><a href="/Cyberzard/ai-and-agent">AI & Agent</a></li>
+          <li><a href="/Cyberzard/remediation">Remediation</a></li>
+          <li><a href="/Cyberzard/security">Security</a></li>
+          <li><a href="/Cyberzard/architecture">Architecture</a></li>
+          <li><a href="/Cyberzard/roadmap">Roadmap</a></li>
+          <li><a href="/Cyberzard/faq">FAQ</a></li>
+        </ul>
+      </nav>
+    </header>
+    <main class="container">
+      <article>
+        <slot />
+      </article>
+    </main>
+    <footer style="text-align:center;font-size:0.8rem;padding:2rem;color:#777;">
+      <p>© {new Date().getFullYear()} CyberPanel AI Wizard • <a href="https://elwizard33.github.io/Cyberzard">GitHub</a></p>
+    </footer>
+  </body>
+</html>

@@ -2,7 +2,7 @@ import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
 
 // GitHub Pages project site settings
-const repo = 'Cyberpanel-Server-Wizard-Cleanup';
+const repo = 'Cyberzard';
 const owner = 'elwizard33';
 const site = `https://${owner}.github.io/${repo}`;
 
