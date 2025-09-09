@@ -18,7 +18,7 @@ jobs:
     runs-on: ubuntu-latest
     defaults:
       run:
-        working-directory: docs/starlight
+        working-directory: docs
     steps:
       - name: Checkout repository
         uses: actions/checkout@v4
@@ -31,10 +31,8 @@ jobs:
             docs/package-lock.json
             docs/package.json
       - name: Install dependencies
-        working-directory: docs
         run: npm ci || npm install
       - name: Build site
-        working-directory: docs
         run: npm run build
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3
