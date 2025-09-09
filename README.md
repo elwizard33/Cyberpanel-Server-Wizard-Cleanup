@@ -5,7 +5,7 @@
 [![Docs](https://img.shields.io/badge/docs-Starlight%20Site-0b7285?logo=astro)](https://elwizard33.github.io/Cyberzard/)
 [![Build Docs](https://github.com/elwizard33/Cyberzard/actions/workflows/deploy-docs.yml/badge.svg)](https://github.com/elwizard33/Cyberzard/actions/workflows/deploy-docs.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-green.svg)](LICENSE)
-![Python](https://img.shields.io/badge/Python-3.11%2B-3776AB?logo=python)
+![Python](https://img.shields.io/badge/Python-3.10%2B-3776AB?logo=python)
 ![Status](https://img.shields.io/badge/Status-Alpha-orange)
 ![AI Optional](https://img.shields.io/badge/AI-Optional-7c3aed)
 ![Offline‑first](https://img.shields.io/badge/Mode-Offline--first-495057)
@@ -66,13 +66,28 @@ Modern incident triage for CyberPanel:
 
 ### Install & Use
 
-Local dev install (editable):
+Fast install (Linux, user‑local, no sudo):
+
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+```
+
+With AI extras (choose one):
+
+```bash
+CYBERZARD_EXTRAS=openai bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+# or
+CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+```
+
+Manual install (from source, editable):
 
 ```bash
 git clone https://github.com/elwizard33/Cyberzard.git
 cd Cyberzard
-python -m venv .venv && source .venv/bin/activate
-pip install -e .[openai]   # or .[anthropic]
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -U pip setuptools wheel
+pip install -e .[openai]   # or .[anthropic] or just .
 ```
 
 Common commands:
@@ -96,6 +111,12 @@ OPENAI_API_KEY=sk-... cyberzard agent "Top suspicious processes and rationale" -
 # Remediation (requires explicit flags)
 cyberzard remediate --delete --kill --preserve
 ```
+
+Troubleshooting
+- Editable install error (missing build_editable hook): upgrade pip/setuptools/wheel in a venv, or use non‑editable install:
+  - `python -m pip install -U pip setuptools wheel`
+  - `pip install .[openai]` (or `.[anthropic]` or just `.`)
+
 
 ### Environment
 

@@ -6,15 +6,29 @@ description: Install Cyberzard CLI and prerequisites
 # Installation
 
 ## Prerequisites
-- Python 3.11+
+- Python 3.10+ (3.11+ recommended)
 - Git
 - (Optional) LLM provider key: `OPENAI_API_KEY` or `ANTHROPIC_API_KEY`
 
-## Install
+## Install (Linux — one‑liner)
+```bash
+bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+```
+
+With AI extras (choose one):
+```bash
+CYBERZARD_EXTRAS=openai bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+# or
+CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
+```
+
+### Manual install (from source)
 ```bash
 git clone https://github.com/elwizard33/Cyberzard.git
 cd Cyberzard
-pip install -e .
+python3 -m venv .venv && source .venv/bin/activate
+python -m pip install -U pip setuptools wheel
+pip install -e .   # or .[openai] / .[anthropic]
 ```
 
 Run a basic command:
@@ -32,6 +46,19 @@ cyberzard agent "Summarize current risks"
 ## Upgrade
 ```bash
 git pull --rebase
-pip install -e . --upgrade
+pip install -e . --upgrade   # or non‑editable: pip install . --upgrade
 ```
+
+## Troubleshooting
+
+Editable install fails with message like:
+
+> build backend is missing the 'build_editable' hook
+
+Fix:
+```bash
+python -m pip install -U pip setuptools wheel
+pip install -e .    # or non‑editable: pip install .
+```
+This commonly occurs on stock Ubuntu with older pip (22.x).
 
