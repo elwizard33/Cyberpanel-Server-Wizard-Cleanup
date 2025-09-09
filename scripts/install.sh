@@ -51,7 +51,7 @@ echo "==> Upgrading pip/setuptools/wheel"
 
 echo "==> Installing Cyberzard (editable)"
 REQ="$REPO_DIR"
-if [ -n "$EXTRAS" ]; then REQ="$REQ[$EXTRAS]"; fi
+if [ -n "$EXTRAS" ]; then REQ="${REQ}[${EXTRAS}]"; fi
 
 # Try editable first; if it fails, fallback to non-editable
 if ! "$VENV_DIR/bin/pip" install -e "$REQ"; then
