@@ -47,12 +47,18 @@ cyberzard agent "Summarize current risks"
 ```
 
 ## Upgrade
+From a git/installer-based install:
+```bash
+cyberzard --upgrade   # or: cyberzard upgrade
+```
+
+Manual (from source checkout):
 ```bash
 git pull --rebase
-pip install -e . --upgrade   # or non‑editable: pip install . --upgrade
+pip install -e . --upgrade   # or pip install . --upgrade
+```
 
 When PyPI releases are available, this section will be updated.
-```
 
 ## Troubleshooting
 

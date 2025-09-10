@@ -5,6 +5,10 @@ description: CLI command reference
 
 # Commands
 
+Global flags:
+- `--provider none|openai|anthropic` select AI provider for this run
+- `--upgrade` self-update from git checkout (see Upgrade section)
+
 ## Scan
 
 Run a deterministic system scan.
@@ -23,6 +27,7 @@ cyberzard scan
 cyberzard scan --json --include-encrypted
 cyberzard scan --no-verify
 cyberzard scan --auto-approve --max-probes 8
+cyberzard --provider openai scan --include-encrypted
 ```
 
 JSON output shape (abridged):
@@ -48,6 +53,7 @@ Run a scan and print concise advice. Uses `CYBERZARD_MODEL_PROVIDER` (none|opena
 ```bash
 CYBERZARD_MODEL_PROVIDER=none cyberzard advise
 CYBERZARD_MODEL_PROVIDER=openai OPENAI_API_KEY=... cyberzard advise --include-encrypted
+cyberzard --provider anthropic advise
 ```
 
 ## Agent
@@ -69,12 +75,6 @@ Run `cyberzard --help` for full list.
 | `agent` | Minimal ReAct loop over safe tools | `--steps N`, `--show-plan` |
 | `show-prompt` | Print the agent system prompt | — |
 | `version` | Show version | — |
+| `upgrade` | Self-update from git checkout | — |
 
-Installation (once releases are published):
-
-```bash
-pipx install cyberzard
-# or
-pip install cyberzard
-```
 

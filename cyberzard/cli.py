@@ -2,6 +2,8 @@ from __future__ import annotations
 
 import json
 from pathlib import Path
+import subprocess
+import shutil
 from typing import Optional
 import sys
 import os
@@ -16,6 +18,81 @@ from .ui import render_scan_output, render_advice_output
 from .agent_engine.verify import verify_plan
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
+
+
+def _find_repo_root(start: Path) -> Optional[Path]:
+    """Walk up from start to find a directory containing .git or pyproject.toml."""
+    cur = start.resolve()
+    for _ in range(6):
+        if (cur / ".git").is_dir() or (cur / "pyproject.toml").is_file():
+            return cur
+        if cur.parent == cur:
+            break
+        cur = cur.parent
+    return None
+
+
+def _self_update() -> tuple[bool, str]:
+    """Attempt to update the installation in-place.
+
+    Strategy:
+    - If running from a git checkout, run: git pull && python -m pip install -U .
+    - Else, print guidance to re-run the installer script.
+    Returns (success, message).
+    """
+    try:
+        repo_root = _find_repo_root(Path(__file__).parent)
+        if repo_root and (repo_root / ".git").exists() and shutil.which("git"):
+            # Fetch latest
+            pull = subprocess.run(["git", "-C", str(repo_root), "pull", "--ff-only"], capture_output=True, text=True)
+            if pull.returncode != 0:
+                return False, f"git pull failed: {pull.stderr.strip() or pull.stdout.strip()}"
+            # Upgrade install in the current interpreter environment
+            pip = subprocess.run([sys.executable, "-m", "pip", "install", "-U", str(repo_root)], capture_output=True, text=True)
+            if pip.returncode != 0:
+                return False, f"pip upgrade failed: {pip.stderr.strip() or pip.stdout.strip()}"
+            return True, "Updated from git and reinstalled successfully."
+        # Fallback guidance
+        one_liner = "bash -c \"$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)\""
+        return False, (
+            "Unable to auto-update: not a git checkout. "
+            "Re-run the installer to upgrade:\n  " + one_liner
+        )
+    except Exception as e:  # pragma: no cover
+        return False, f"self-update failed: {e}"
+
+
+@app.callback()
+def _root(
+    upgrade: bool = typer.Option(
+        False,
+        "--upgrade",
+        help="Upgrade Cyberzard to the latest from GitHub (git installs).",
+        show_default=False,
+    ),
+    provider: Optional[str] = typer.Option(
+        None,
+        "--provider",
+        help="Select AI provider for this run: none, openai, anthropic.",
+        case_sensitive=False,
+    ),
+) -> None:
+    """Global options handler."""
+    # Apply provider override early so downstream imports read the env
+    if provider:
+        val = provider.lower().strip()
+        if val not in {"none", "openai", "anthropic"}:
+            typer.echo("Invalid --provider value. Use: none | openai | anthropic")
+            raise typer.Exit(code=2)
+        os.environ["CYBERZARD_MODEL_PROVIDER"] = val
+    if upgrade:
+        ok, msg = _self_update()
+        if ok:
+            typer.echo(f"✅ {msg}")
+            raise typer.Exit(code=0)
+        else:
+            typer.echo(msg)
+            raise typer.Exit(code=1)
 
 
 @app.command()
@@ -129,6 +206,17 @@ def show_prompt() -> None:
 def version() -> None:
     """Show version information."""
     typer.echo("cyberzard version 0.1.0")
+
+
+@app.command()
+def upgrade() -> None:
+    """Upgrade Cyberzard to the latest version (git installs)."""
+    ok, msg = _self_update()
+    if ok:
+        typer.echo(f"✅ {msg}")
+    else:
+        typer.echo(msg)
+        raise typer.Exit(code=1)
 
 
 @app.command()

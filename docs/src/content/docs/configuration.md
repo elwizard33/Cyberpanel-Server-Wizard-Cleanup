@@ -5,7 +5,7 @@ description: Configure Cyberzard settings
 
 # Configuration
 
-Set environment variables or a future `config.toml` (planned). Environment variables take priority.
+Set environment variables or a future `config.toml` (planned). Precedence: CLI flags > environment.
 
 | Variable | Purpose | Default |
 |----------|---------|---------|
@@ -17,5 +17,10 @@ Example minimal AI setup:
 ```bash
 export CYBERZARD_MODEL_PROVIDER=openai
 export OPENAI_API_KEY=sk-...
+```
+
+Or per-invocation without changing your shell environment:
+```bash
+cyberzard --provider anthropic advise
 ```
 
