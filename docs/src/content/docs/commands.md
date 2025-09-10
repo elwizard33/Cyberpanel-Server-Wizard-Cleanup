@@ -70,3 +70,11 @@ Run `cyberzard --help` for full list.
 | `show-prompt` | Print the agent system prompt | — |
 | `version` | Show version | — |
 
+Installation (once releases are published):
+
+```bash
+pipx install cyberzard
+# or
+pip install cyberzard
+```
+

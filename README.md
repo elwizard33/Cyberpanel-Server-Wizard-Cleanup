@@ -90,6 +90,28 @@ python -m pip install -U pip setuptools wheel
 pip install -e .[openai]   # or .[anthropic] or just .
 ```
 
+Install via pipx (recommended once releases exist):
+
+```bash
+pipx install cyberzard  # installs 'cyberzard' into your PATH
+# with extras when published
+pipx install 'cyberzard[openai]'
+pipx upgrade cyberzard
+```
+
+Install via pip (system/user site):
+
+```bash
+pip install cyberzard
+pip install 'cyberzard[openai]'
+```
+
+Upgrade:
+
+```bash
+pipx upgrade cyberzard  # or: pip install -U cyberzard
+```
+
 Common commands:
 
 ```bash
