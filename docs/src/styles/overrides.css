@@ -6,6 +6,16 @@
   --sl-content-width: 50rem;
   /* control scale for TOC width relative to Starlight's sidebar width */
   --cz-toc-scale: 0.55; /* smaller = narrower TOC */
+  /* content padding on narrow screens */
+  --cz-content-pad-x: 1rem;
+  /* nicer default radius for surfaces */
+  --cz-radius: 10px;
+  /* subtle surface color vars fall back to Starlight tokens */
+  --cz-surface: var(--sl-color-gray-6, #0f1115);
+  --cz-surface-alt: var(--sl-color-gray-5, #161922);
+  --cz-border: color-mix(in oklab, var(--sl-color-gray-3, #2a2f3a), transparent 60%);
+  --cz-accent: var(--sl-color-accent, #7c5cff);
+  --cz-accent-contrast: var(--sl-color-white, #fff);
 }
 @media (min-width: 72rem){
   /* Reduce right sidebar (TOC) width on large screens */
@@ -28,3 +38,151 @@
 
 /* Slightly tighten link text in TOC for better density */
 .right-sidebar-panel.astro-pb3aqygn a{ line-height: 1.15; }
+
+/* --- Global typography & layout polish --- */
+html { scroll-behavior: smooth; }
+html, body { -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+body { line-height: 1.6; }
+
+/* Use a comfortable max width and center content on very large screens */
+[data-has-sidebar] main { margin-inline: auto; }
+
+/* Headings spacing & rhythm */
+h1, h2, h3, h4, h5, h6 { line-height: 1.2; letter-spacing: -0.01em; }
+h1 { margin-top: 0; }
+h2, h3 { margin-top: 2.25rem; }
+h4, h5, h6 { margin-top: 1.75rem; }
+h1 + p { font-size: 1.05rem; color: var(--sl-color-gray-2); }
+
+/* Paragraphs & lists spacing */
+p { margin: 0.85rem 0; }
+ul, ol { margin: 0.75rem 0 1rem; padding-inline-start: 1.25rem; }
+li { margin: 0.25rem 0; }
+
+/* Links */
+a { text-underline-offset: 0.15em; }
+a:hover { text-decoration-thickness: 2px; }
+
+/* Blockquotes */
+blockquote {
+  border-inline-start: 3px solid var(--cz-border);
+  margin: 1.25rem 0;
+  padding: 0.5rem 1rem;
+  background: color-mix(in oklab, var(--cz-surface-alt), transparent 75%);
+}
+
+/* Images & figures */
+img, video { max-width: 100%; height: auto; }
+figure { margin: 1.25rem 0; }
+figcaption { color: var(--sl-color-gray-2); font-size: 0.95em; }
+
+/* Tables: make them scroll nicely on small screens */
+.sl-markdown-content table {
+  display: block;
+  width: 100%;
+  overflow-x: auto;
+  border-collapse: collapse;
+  border: 1px solid var(--cz-border);
+  border-radius: var(--cz-radius);
+}
+.sl-markdown-content th, .sl-markdown-content td {
+  padding: 0.6rem 0.8rem;
+  border-bottom: 1px solid var(--cz-border);
+}
+.sl-markdown-content thead th {
+  background: color-mix(in oklab, var(--cz-surface-alt), transparent 70%);
+}
+.sl-markdown-content tr:nth-child(2n) td {
+  background: color-mix(in oklab, var(--cz-surface-alt), transparent 85%);
+}
+
+/* --- Code & code blocks --- */
+code {
+  background: color-mix(in oklab, var(--cz-surface-alt), transparent 80%);
+  border: 1px solid var(--cz-border);
+  padding: 0.15rem 0.35rem;
+  border-radius: 6px;
+  font-size: 0.95em;
+}
+pre code { background: transparent; border: 0; padding: 0; }
+pre {
+  background: var(--cz-surface-alt);
+  border: 1px solid var(--cz-border);
+  border-radius: var(--cz-radius);
+  padding: 0.9rem 1rem;
+  overflow: auto;
+}
+
+/* Copy button (Pagefind/starlight often injects one) */
+button.copy { /* fallback generic selector */
+  background: color-mix(in oklab, var(--cz-surface), transparent 10%);
+  border: 1px solid var(--cz-border);
+  color: inherit;
+  border-radius: 6px;
+}
+button.copy:hover { border-color: var(--cz-accent); }
+
+/* --- Search (Pagefind UI) --- */
+.pagefind-ui {
+  --pagefind-ui-primary: var(--cz-accent);
+  --pagefind-ui-text: inherit;
+  --pagefind-ui-background: var(--cz-surface);
+  --pagefind-ui-border: var(--cz-border);
+  --pagefind-ui-border-width: 1px;
+  --pagefind-ui-border-radius: 10px;
+}
+.pagefind-ui__search-input {
+  border-radius: 999px !important;
+  padding: 0.6rem 0.9rem !important;
+  border: 1px solid var(--cz-border) !important;
+}
+.pagefind-ui__search-input:focus {
+  outline: 2px solid color-mix(in oklab, var(--cz-accent), transparent 60%);
+  outline-offset: 2px;
+}
+
+/* --- Sidebar & TOC polish (generic fallbacks in case classes change) --- */
+@media (min-width: 72rem){
+  .right-sidebar-container { width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale)); min-width: 12rem; }
+  .right-sidebar-panel .sl-container { max-width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale)); }
+}
+.right-sidebar-panel a { line-height: 1.15; }
+
+/* Active link highlight for sidebar and TOC */
+nav .sl-link:is([aria-current="page"], .is-active),
+.right-sidebar-panel .sl-link:is([aria-current="true"], .is-active){
+  background: color-mix(in oklab, var(--cz-accent), transparent 92%);
+  border-left: 3px solid var(--cz-accent);
+}
+
+/* --- Accessibility & focus --- */
+:focus-visible {
+  outline: 2px solid color-mix(in oklab, var(--cz-accent), transparent 40%);
+  outline-offset: 2px;
+  border-radius: 6px;
+}
+
+/* Skip link utility (if present) */
+.skip-link { position: absolute; left: -9999px; top: auto; }
+.skip-link:focus { left: 1rem; top: 1rem; z-index: 1000; background: var(--cz-surface); color: var(--cz-accent-contrast); padding: 0.5rem 0.75rem; border-radius: 8px; }
+
+/* --- Misc: scrollbar --- */
+* { scrollbar-width: thin; scrollbar-color: var(--cz-border) transparent; }
+*::-webkit-scrollbar { height: 10px; width: 10px; }
+*::-webkit-scrollbar-thumb { background: var(--cz-border); border-radius: 999px; }
+*::-webkit-scrollbar-track { background: transparent; }
+
+/* --- Mobile tweaks --- */
+@media (max-width: 48rem){
+  :root{ --sl-content-width: calc(100vw - 2 * var(--cz-content-pad-x)); }
+  .sl-markdown-content table { font-size: 0.95em; }
+  pre { font-size: 0.95em; }
+}
+
+/* --- Print styles for clean exports --- */
+@media print{
+  nav, .left-sidebar, .right-sidebar-container, .right-sidebar-panel, footer { display: none !important; }
+  main, .main-pane { width: 100% !important; max-width: 100% !important; }
+  pre, code { break-inside: avoid; white-space: pre-wrap; word-break: break-word; }
+  a[href^="http"]::after { content: " (" attr(href) ")"; font-size: 0.85em; }
+}
