@@ -23,20 +23,18 @@ CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.c
 ```
 
 ### Install from Release (no git)
-Note: Releases are not yet published. Until the first tagged release is out, use the one‑liner installer or manual source install below.
-
-When releases are available, download the latest wheel (.whl) from the GitHub Releases page, then install:
+Download the latest packaged wheel (.whl) from GitHub Releases and install:
 ```bash
 curl -fsSL -o cyberzard.whl \
-	https://github.com/elwizard33/Cyberzard/releases/latest/download/cyberzard-0.1.0-py3-none-any.whl
+	https://github.com/elwizard33/Cyberzard/releases/latest/download/cyberzard-latest-py3-none-any.whl
 python3 -m pip install --user ./cyberzard.whl
-# with extras when needed (from a matching extras wheel when available)
+# Note: extras are supported when installing from an index (e.g. PyPI). For wheel files, install extras separately if needed.
 ```
 
-Alternatively (when available) install directly from a versioned release URL (pin version):
+Alternatively, pin a specific versioned wheel:
 ```bash
 python3 -m pip install --user \
-	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.1/cyberzard-0.1.0-py3-none-any.whl
+	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.0/cyberzard-0.1.0-py3-none-any.whl
 ```
 
 ### Manual install (from source)
