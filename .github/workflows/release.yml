@@ -38,6 +38,13 @@ jobs:
         with:
           name: dist
           path: dist
+      - name: Add stable alias for latest wheel
+        shell: bash
+        run: |
+          set -euo pipefail
+          WHEEL=$(ls dist/*.whl | head -n1)
+          echo "Found wheel: $WHEEL"
+          cp "$WHEEL" dist/cyberzard-latest-py3-none-any.whl
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v2
         with:
