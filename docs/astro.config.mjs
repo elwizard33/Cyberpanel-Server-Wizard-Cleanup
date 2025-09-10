@@ -13,6 +13,8 @@ export default defineConfig({
     starlight({
       title: 'Cyberzard Docs',
       description: 'AI-assisted CyberPanel security CLI documentation',
+  // Load site-wide style overrides (e.g., tweak TOC width)
+  customCss: ['./src/styles/overrides.css'],
       social: [
         { label: 'GitHub', href: 'https://github.com/elwizard33/Cyberzard', icon: 'github' }
       ],

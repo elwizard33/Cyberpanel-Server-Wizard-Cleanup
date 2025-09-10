@@ -1,0 +1,22 @@
+/* Site-wide UI overrides for Starlight */
+
+/* Narrow the right-hand TOC column and give more room to content */
+:root{
+  /* default content width can be a bit tight on large screens; bump slightly */
+  --sl-content-width: 50rem;
+}
+@media (min-width: 72rem){
+  /* Reduce right sidebar (TOC) computed width */
+  .right-sidebar-container.astro-67yu43on{
+    /* Original is: calc(var(--sl-sidebar-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2) */
+    width: calc(var(--sl-sidebar-width) * 0.8);
+  }
+  /* Ensure the main content stretches to use freed space */
+  [data-has-sidebar][data-has-toc] .main-pane.astro-67yu43on{
+    /* Original is: width: calc(var(--sl-content-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2) */
+    width: calc(var(--sl-content-width) + (100% - var(--sl-content-width) - (var(--sl-sidebar-width) * 0.8)) / 2);
+  }
+}
+
+/* Slightly tighten link text in TOC for better density */
+.right-sidebar-panel.astro-pb3aqygn a{ line-height: 1.2; }
