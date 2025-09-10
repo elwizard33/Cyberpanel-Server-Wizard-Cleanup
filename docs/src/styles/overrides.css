@@ -5,7 +5,7 @@
   /* default content width can be a bit tight on large screens; bump slightly */
   --sl-content-width: 50rem;
   /* control scale for TOC width relative to Starlight's sidebar width */
-  --cz-toc-scale: 0.55; /* smaller = narrower TOC */
+  --cz-toc-scale: 0.48; /* smaller = narrower TOC */
   /* content padding on narrow screens */
   --cz-content-pad-x: 1rem;
   /* nicer default radius for surfaces */
@@ -26,8 +26,8 @@
   }
   /* Ensure internal container uses the same narrowed width to avoid overflow */
   .right-sidebar-panel.astro-pb3aqygn .sl-container.astro-pb3aqygn{
-    width: calc((var(--sl-sidebar-width) * var(--cz-toc-scale)) - 2 * var(--sl-sidebar-pad-x));
-    max-width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale));
+    width: 100%;
+    max-width: 100%;
   }
   /* Expand main content to use the freed space */
   [data-has-sidebar][data-has-toc] .main-pane.astro-67yu43on{
@@ -144,7 +144,7 @@ button.copy:hover { border-color: var(--cz-accent); }
 /* --- Sidebar & TOC polish (generic fallbacks in case classes change) --- */
 @media (min-width: 72rem){
   .right-sidebar-container { width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale)); min-width: 12rem; }
-  .right-sidebar-panel .sl-container { max-width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale)); }
+  .right-sidebar-panel .sl-container { width: 100%; max-width: 100%; }
 }
 .right-sidebar-panel a { line-height: 1.15; }
 
