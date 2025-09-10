@@ -47,7 +47,7 @@ Important: don’t rename the wheel file. Pip relies on the filename to parse ve
 Alternatively, pin a specific versioned wheel:
 ```bash
 python3 -m pip install --user \
-	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.2/cyberzard-0.1.2-py3-none-any.whl
+	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.3/cyberzard-0.1.3-py3-none-any.whl
 ```
 
 ### Manual install (from source)
