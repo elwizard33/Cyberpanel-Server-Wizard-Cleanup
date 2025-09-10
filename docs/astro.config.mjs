@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
-import starlightSearch from '@astrojs/starlight/search';
 
 // GitHub Pages project site settings
 const repo = 'Cyberzard';
@@ -14,7 +13,9 @@ export default defineConfig({
     starlight({
       title: 'Cyberzard Docs',
       description: 'AI-assisted CyberPanel security CLI documentation',
-      social: { github: 'https://github.com/elwizard33/Cyberzard' },
+      social: [
+        { label: 'GitHub', href: 'https://github.com/elwizard33/Cyberzard', icon: 'github' }
+      ],
       sidebar: [
         {
           label: 'Getting Started',
@@ -42,8 +43,5 @@ export default defineConfig({
         },
       ],
     })
-  ,
-  // Enable built-in Starlight search (Pagefind)
-  starlightSearch()
   ]
 });
