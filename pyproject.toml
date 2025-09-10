@@ -23,8 +23,8 @@ dependencies = [
 
 [project.urls]
 Homepage = "https://elwizard33.github.io/Cyberzard"
-Source = "https://elwizard33.github.io/Cyberzard"
-Issues = "https://elwizard33.github.io/Cyberzard/issues"
+Source = "https://github.com/elwizard33/Cyberzard"
+Issues = "https://github.com/elwizard33/Cyberzard/issues"
 
 [project.optional-dependencies]
 anthropic = ["anthropic>=0.29.0"]
