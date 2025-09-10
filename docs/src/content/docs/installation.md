@@ -31,6 +31,18 @@ python -m pip install -U pip setuptools wheel
 pip install -e .   # or .[openai] / .[anthropic]
 ```
 
+### Install from release (pipx/pip)
+Once official releases are published to PyPI:
+
+```bash
+pipx install cyberzard
+# or with extras
+pipx install 'cyberzard[openai]'
+
+# Alternatively with pip
+pip install cyberzard
+```
+
 Run a basic command:
 ```bash
 cyberzard scan
@@ -47,6 +59,11 @@ cyberzard agent "Summarize current risks"
 ```bash
 git pull --rebase
 pip install -e . --upgrade   # or non‑editable: pip install . --upgrade
+
+From PyPI:
+```bash
+pipx upgrade cyberzard  # or: pip install -U cyberzard
+```
 ```
 
 ## Troubleshooting

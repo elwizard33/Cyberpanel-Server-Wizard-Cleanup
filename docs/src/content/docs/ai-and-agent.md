@@ -20,14 +20,14 @@ Safety:
 - No remote downloads or executions
 - Remediation is dry-run only with `command_preview`
 - Paths are shell-quoted
- - Verification probes are read-only (e.g., `ps`, `systemctl is-active`, file excerpts)
- - Probes require explicit per-category user consent in TTY, unless `--auto-approve` is used
+- Verification probes are read-only (e.g., `ps`, `systemctl is-active`, file excerpts)
+- Probes require explicit per-category user consent in TTY, unless `--auto-approve` is used
 
 Advice Provider:
 - `CYBERZARD_MODEL_PROVIDER` = `none` (default), `openai`, or `anthropic`
 - When unset or SDK/API key missing, static advice is produced from summary counts
 - When configured, a compact prompt is sent; timeouts and sizes are constrained
- - Optional: action-level justifications via `justify_actions`; degrades to `None` when not configured
+- Optional: action-level justifications via `justify_actions`; degrades to `None` when not configured
 
 Verification Layer:
 - `verify_plan(results, plan, allow_probes, max_probes, consent_callback)` cross-checks actions against evidence and optional safe probes
