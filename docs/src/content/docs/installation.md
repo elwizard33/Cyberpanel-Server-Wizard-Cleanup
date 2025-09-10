@@ -34,7 +34,7 @@ python3 -m pip install --user ./cyberzard.whl
 Alternatively, pin a specific versioned wheel:
 ```bash
 python3 -m pip install --user \
-	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.0/cyberzard-0.1.0-py3-none-any.whl
+	https://github.com/elwizard33/Cyberzard/releases/download/v0.1.2/cyberzard-0.1.2-py3-none-any.whl
 ```
 
 ### Manual install (from source)
