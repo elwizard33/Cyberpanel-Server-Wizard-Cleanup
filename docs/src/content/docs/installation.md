@@ -25,21 +25,30 @@ CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.c
 ### Install from Release (no git)
 Install the latest packaged wheel from GitHub Releases (Linux/macOS):
 ```bash
-# Get latest tag via GitHub API and install the matching wheel
-TAG=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
-	| grep -oE '"tag_name"\s*:\s*"v[^"]+' | sed -E 's/.*"(v[^"]+)"/\1/') && \
-python3 -m pip install --user \
-	"https://github.com/elwizard33/Cyberzard/releases/download/${TAG}/cyberzard-${TAG#v}-py3-none-any.whl"
+# Fetch the latest wheel's browser_download_url and install (no jq required)
+WHEEL_URL=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
+	| grep -oE '"browser_download_url"\s*:\s*"[^"]+\.whl"' \
+	| sed -E 's/.*"(https:[^"]+)"/\1/' | head -n1) && \
+python3 -m pip install --user "$WHEEL_URL"
 # Note: extras are supported when installing from an index (e.g. PyPI). For wheel files, install extras separately if needed.
 ```
 
-Or download the file and keep its original filename, then install:
+Or download the file first (keeping its original name), then install:
+```bash
+WHEEL_URL=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
+	| grep -oE '"browser_download_url"\s*:\s*"[^"]+\.whl"' \
+	| sed -E 's/.*"(https:[^"]+)"/\1/' | head -n1) && \
+curl -fsSL -L -O -J "$WHEEL_URL" && \
+python3 -m pip install --user "./$(basename "$WHEEL_URL")"
+```
+
+Fallback (derive the tag and construct the URL):
 ```bash
 TAG=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
-	| grep -oE '"tag_name"\s*:\s*"v[^"]+' | sed -E 's/.*"(v[^"]+)"/\1/') && \
-curl -fsSL -L -O -J \
-	"https://github.com/elwizard33/Cyberzard/releases/download/${TAG}/cyberzard-${TAG#v}-py3-none-any.whl" && \
-python3 -m pip install --user "./cyberzard-${TAG#v}-py3-none-any.whl"
+	| sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\(v[^"[:space:]]*\)".*/\1/p') && \
+VER=${TAG#v} && \
+python3 -m pip install --user \
+	"https://github.com/elwizard33/Cyberzard/releases/download/${TAG}/cyberzard-${VER}-py3-none-any.whl"
 ```
 
 Important: don’t rename the wheel file. Pip relies on the filename to parse version/metadata.
