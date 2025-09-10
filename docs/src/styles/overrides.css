@@ -5,7 +5,7 @@
   /* default content width can be a bit tight on large screens; bump slightly */
   --sl-content-width: 50rem;
   /* control scale for TOC width relative to Starlight's sidebar width */
-  --cz-toc-scale: 0.48; /* smaller = narrower TOC */
+  --cz-toc-scale: 0.35; /* smaller = narrower TOC */
   /* content padding on narrow screens */
   --cz-content-pad-x: 1rem;
   /* nicer default radius for surfaces */
