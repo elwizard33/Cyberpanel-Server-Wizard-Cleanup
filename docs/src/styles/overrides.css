@@ -179,6 +179,13 @@ nav .sl-link:is([aria-current="page"], .is-active),
   pre { font-size: 0.95em; }
 }
 
+/* --- Header logo sizing --- */
+/* Ensure the docs header logo uses 10% width with proper aspect ratio */
+.site-title img {
+  width: 10% !important;
+  height: auto;
+}
+
 /* --- Print styles for clean exports --- */
 @media print{
   nav, .left-sidebar, .right-sidebar-container, .right-sidebar-panel, footer { display: none !important; }
