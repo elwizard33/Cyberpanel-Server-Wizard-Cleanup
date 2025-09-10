@@ -20,25 +20,25 @@ export default defineConfig({
         {
           label: 'Getting Started',
           items: [
-            { label: 'Installation', link: '/docs/installation/' },
-            { label: 'Commands', link: '/docs/commands/' },
-            { label: 'Configuration', link: '/docs/configuration/' },
+            { label: 'Installation', link: '/installation/' },
+            { label: 'Commands', link: '/commands/' },
+            { label: 'Configuration', link: '/configuration/' },
           ],
         },
         {
           label: 'How it works',
           items: [
-            { label: 'AI & Agent', link: '/docs/ai-and-agent/' },
-            { label: 'Architecture', link: '/docs/architecture/' },
-            { label: 'Remediation', link: '/docs/remediation/' },
-            { label: 'Security Model', link: '/docs/security/' },
+            { label: 'AI & Agent', link: '/ai-and-agent/' },
+            { label: 'Architecture', link: '/architecture/' },
+            { label: 'Remediation', link: '/remediation/' },
+            { label: 'Security Model', link: '/security/' },
           ],
         },
         {
           label: 'Project',
           items: [
-            { label: 'FAQ', link: '/docs/faq/' },
-            { label: 'Roadmap', link: '/docs/roadmap/' },
+            { label: 'FAQ', link: '/faq/' },
+            { label: 'Roadmap', link: '/roadmap/' },
           ],
         },
       ],

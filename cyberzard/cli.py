@@ -3,6 +3,7 @@ from __future__ import annotations
 import json
 from pathlib import Path
 import subprocess
+import shlex
 import shutil
 from typing import Optional
 import sys
@@ -32,7 +33,7 @@ def _find_repo_root(start: Path) -> Optional[Path]:
     return None
 
 
-def _self_update() -> tuple[bool, str]:
+def _self_update(channel: str = "edge") -> tuple[bool, str]:
     """Attempt to update the installation in-place.
 
     Strategy:
@@ -43,15 +44,30 @@ def _self_update() -> tuple[bool, str]:
     try:
         repo_root = _find_repo_root(Path(__file__).parent)
         if repo_root and (repo_root / ".git").exists() and shutil.which("git"):
-            # Fetch latest
-            pull = subprocess.run(["git", "-C", str(repo_root), "pull", "--ff-only"], capture_output=True, text=True)
-            if pull.returncode != 0:
-                return False, f"git pull failed: {pull.stderr.strip() or pull.stdout.strip()}"
+            if channel == "stable":
+                # Checkout latest tag that matches v*.*.*
+                subprocess.run(["git", "-C", str(repo_root), "fetch", "--tags", "--force"], capture_output=True, text=True)
+                tag_proc = subprocess.run(
+                    ["bash", "-lc", f"git -C {shlex.quote(str(repo_root))} tag --list 'v*' --sort=-v:refname | head -n1"],
+                    capture_output=True, text=True
+                )
+                tag = (tag_proc.stdout or "").strip()
+                if not tag:
+                    # Fallback to edge if no tags
+                    channel = "edge"
+                else:
+                    co = subprocess.run(["git", "-C", str(repo_root), "checkout", "--quiet", tag], capture_output=True, text=True)
+                    if co.returncode != 0:
+                        return False, f"git checkout {tag} failed: {co.stderr.strip() or co.stdout.strip()}"
+            if channel == "edge":
+                pull = subprocess.run(["git", "-C", str(repo_root), "pull", "--ff-only"], capture_output=True, text=True)
+                if pull.returncode != 0:
+                    return False, f"git pull failed: {pull.stderr.strip() or pull.stdout.strip()}"
             # Upgrade install in the current interpreter environment
             pip = subprocess.run([sys.executable, "-m", "pip", "install", "-U", str(repo_root)], capture_output=True, text=True)
             if pip.returncode != 0:
                 return False, f"pip upgrade failed: {pip.stderr.strip() or pip.stdout.strip()}"
-            return True, "Updated from git and reinstalled successfully."
+            return True, ("Updated to latest tag and reinstalled" if channel == "stable" else "Updated from git and reinstalled successfully.")
         # Fallback guidance
         one_liner = "bash -c \"$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)\""
         return False, (
@@ -209,9 +225,16 @@ def version() -> None:
 
 
 @app.command()
-def upgrade() -> None:
+def upgrade(
+    channel: str = typer.Option("edge", "--channel", help="Upgrade channel: edge (main) or stable (latest tag)",
+                                case_sensitive=False)
+) -> None:
     """Upgrade Cyberzard to the latest version (git installs)."""
-    ok, msg = _self_update()
+    ch = channel.lower().strip()
+    if ch not in {"edge", "stable"}:
+        typer.echo("Invalid --channel value. Use: edge | stable")
+        raise typer.Exit(code=2)
+    ok, msg = _self_update(channel=ch)
     if ok:
         typer.echo(f"✅ {msg}")
     else:
