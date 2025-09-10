@@ -22,11 +22,15 @@ Action categories covered:
 Always review the plan before executing any commands manually.
 
 
-Remediation workflow:
+Verification-aware remediation workflow:
 1. Gather findings (scan).
 2. Rank by severity & exploitability.
 3. Draft ordered plan (advise or agent output).
-4. Manually approve & execute outside agent.
+4. Optionally verify the plan (`--verify`) to reduce false positives using read-only probes.
+	- Kept: action is supported by evidence or probes.
+	- Dropped: action no longer applies; reason provided.
+	- Downgraded: unknown or ambiguous; manual review recommended.
+5. Manually approve & execute outside agent.
 
-Planned: structured JSON plan export.
+JSON export includes a `verification` object when `--verify` is used. Execution remains manual; previews are for review only.
 
