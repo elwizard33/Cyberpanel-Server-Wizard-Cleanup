@@ -73,8 +73,26 @@ Run `cyberzard --help` for full list.
 | `scan` | Run all scanners, list findings | `--json`, `--verify/--no-verify`, `--auto-approve`, `--max-probes` |
 | `advise` | Generate concise advice from scan | `--json`, `--include-encrypted` |
 | `agent` | Minimal ReAct loop over safe tools | `--steps N`, `--show-plan` |
+| `chat` | Interactive chat with permission-gated tools | `--verify/--no-verify`, `--auto-approve`, `--max-probes` |
 | `show-prompt` | Print the agent system prompt | — |
 | `version` | Show version | — |
 | `upgrade` | Self-update from git checkout | — |
+
+## Chat
+
+A beautiful, permission-aware chat loop. Cyberzard stays focused on CyberPanel anomaly detection.
+
+Flags:
+- `--verify/--no-verify` AI/heuristic verification of suggested actions (default: verify)
+- `--auto-approve` auto-consent to safe read-only probes
+- `--max-probes N` limit total probes during verification
+
+Examples:
+
+```bash
+cyberzard chat
+cyberzard chat --no-verify
+cyberzard chat --auto-approve --max-probes 8
+```
 
 

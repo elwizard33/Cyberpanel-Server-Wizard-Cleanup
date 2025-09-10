@@ -17,6 +17,7 @@ from .agent_engine.provider import summarize as summarize_advice
 from .evidence import write_scan_snapshot  # will no-op if not implemented
 from .ui import render_scan_output, render_advice_output
 from .agent_engine.verify import verify_plan
+from .chat import run_chat
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
 
@@ -221,7 +222,12 @@ def show_prompt() -> None:
 @app.command()
 def version() -> None:
     """Show version information."""
-    typer.echo("cyberzard version 0.1.0")
+    try:
+        from importlib.metadata import version as _pkg_version  # Python 3.8+
+        v = _pkg_version("cyberzard")
+    except Exception:
+        v = "unknown"
+    typer.echo(f"cyberzard version {v}")
 
 
 @app.command()
@@ -270,6 +276,19 @@ def advise(
             except Exception:
                 pass
         typer.echo(advice)
+
+
+@app.command()
+def chat(
+    verify: bool = typer.Option(True, "--verify/--no-verify", help="Verify remediation suggestions during chat"),
+    auto_approve: bool = typer.Option(False, "--auto-approve", help="Auto-approve safe, read-only probes without prompting"),
+    max_probes: int = typer.Option(5, "--max-probes", help="Max number of probe operations during verification"),
+) -> None:
+    """Interactive Rich-powered chat focused on CyberPanel anomaly hunting."""
+    # Use TTY check to avoid launching rich UI in non-interactive contexts
+    if not sys.stdout.isatty() or os.getenv("NO_COLOR") in {"1", "true", "TRUE"}:
+        typer.echo("Chat mode is best used in an interactive terminal (TTY).")
+    run_chat(verify=verify, auto_approve=auto_approve, max_probes=max_probes)
 
 
 def main() -> None:  # pragma: no cover

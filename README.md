@@ -63,6 +63,7 @@ Modern incident triage for CyberPanel:
 | AI reasoning (optional) | Summaries, prioritization, advice (OpenAI/Anthropic/none) |
 | ReAct loop | Safe tool schema, sandboxed helpers |
 | Output | Pretty tables + JSON |
+| Chat mode | Interactive, permission‑aware assistant | Focused on CyberPanel |
 
 ### Install & Use
 
@@ -109,6 +110,10 @@ OPENAI_API_KEY=sk-... cyberzard explain --provider openai
 
 # Bounded reasoning loop (ReAct)
 OPENAI_API_KEY=sk-... cyberzard agent "Top suspicious processes and rationale" --steps 4
+
+# Interactive chat (permission‑aware)
+cyberzard chat
+cyberzard chat --auto-approve --max-probes 8
 
 # Remediation (requires explicit flags)
 cyberzard remediate --delete --kill --preserve

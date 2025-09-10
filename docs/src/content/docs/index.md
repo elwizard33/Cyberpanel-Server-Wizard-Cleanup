@@ -15,6 +15,7 @@ Cyberzard accelerates incident triage by combining deterministic scanners (proce
 | Remediation | Structured action plans | Human approval first |
 | AI Assist | Summaries, prioritization | Provider optional (offline safe) |
 | Safety | Tool allowlist, step cap | No raw shell exposed |
+| Chat | Interactive, permission‑aware | See [Chat mode](./chat/) |
 
-Next: Read the [Installation](./installation) page.
+Next: Read the [Installation](./installation) page, then try the [Chat mode](./chat/).
 
