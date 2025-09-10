@@ -31,17 +31,8 @@ python -m pip install -U pip setuptools wheel
 pip install -e .   # or .[openai] / .[anthropic]
 ```
 
-### Install from release (pipx/pip)
-Once official releases are published to PyPI:
-
-```bash
-pipx install cyberzard
-# or with extras
-pipx install 'cyberzard[openai]'
-
-# Alternatively with pip
-pip install cyberzard
-```
+### Install from release (PyPI)
+Planned for future. For now, use the one-liner installer or source install above.
 
 Run a basic command:
 ```bash
@@ -60,10 +51,7 @@ cyberzard agent "Summarize current risks"
 git pull --rebase
 pip install -e . --upgrade   # or non‑editable: pip install . --upgrade
 
-From PyPI:
-```bash
-pipx upgrade cyberzard  # or: pip install -U cyberzard
-```
+When PyPI releases are available, this section will be updated.
 ```
 
 ## Troubleshooting
@@ -78,4 +66,14 @@ python -m pip install -U pip setuptools wheel
 pip install -e .    # or non‑editable: pip install .
 ```
 This commonly occurs on stock Ubuntu with older pip (22.x).
+
+Docs build on CI fails with rollup optional deps error:
+
+> Cannot find module @rollup/rollup-linux-x64-gnu
+
+Workaround (already applied in CI): remove node_modules and lockfile, then reinstall:
+```bash
+rm -rf docs/node_modules docs/package-lock.json
+cd docs && npm install --legacy-peer-deps && npm run build
+```
 
