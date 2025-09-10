@@ -2,6 +2,8 @@
 
 from pathlib import Path
 from typing import Dict, Any
+import os
+import json
 
 
 """Evidence preservation functionality."""
@@ -42,3 +44,33 @@ def preserve_file(source_path: Path, evidence_dir: Path) -> Dict[str, Any]:
         "sha256": sha256_hash.hexdigest(),
         "status": "preserved"
     }
+
+
+def write_scan_snapshot(scan_results: Dict[str, Any]) -> None:
+    """Optionally write a compact scan snapshot to CYBERZARD_EVIDENCE_DIR.
+
+    Writes summary and a few top indicators; best-effort and silent on failure.
+    """
+    try:
+        evidence_dir = os.getenv("CYBERZARD_EVIDENCE_DIR")
+        if not evidence_dir:
+            return
+        p = Path(evidence_dir)
+        if not p.exists():
+            p.mkdir(parents=True, exist_ok=True)
+        if not os.access(str(p), os.W_OK):
+            return
+        # Build compact payload
+        summary = scan_results.get("summary", {})
+        payload = {"summary": summary}
+        # Filename
+        name = f"scan-{int(__import__('time').time())}.json"
+        out = p / name
+        tmp = p / (name + ".tmp")
+        with open(tmp, "w", encoding="utf-8") as fh:
+            json.dump(payload, fh, separators=(",", ":"))
+        os.replace(tmp, out)
+        os.chmod(out, 0o600)
+    except Exception:
+        # Silent best-effort
+        return

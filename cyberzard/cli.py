@@ -7,6 +7,9 @@ from typing import Optional
 import typer
 
 from .agent import run_agent, SYSTEM_PROMPT
+from .agent_engine.tools import scan_server, propose_remediation
+from .agent_engine.provider import summarize as summarize_advice
+from .evidence import write_scan_snapshot  # will no-op if not implemented
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
 
@@ -14,18 +17,28 @@ app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CL
 @app.command()
 def scan(
     json_out: bool = typer.Option(False, "--json", help="Output full JSON result"),
+    include_encrypted: bool = typer.Option(
+        False,
+        "--include-encrypted/--no-include-encrypted",
+        help="Search for encrypted-looking files",
+    ),
 ) -> None:
     """Run a quick system scan and print findings or plan summary."""
     typer.echo("🔍 Starting cyberzard scan...")
-    result = run_agent(user_query="scan", max_steps=3)
+    results = scan_server(include_encrypted=include_encrypted)
+    # Attempt evidence snapshot (best-effort)
+    try:
+        write_scan_snapshot(results)
+    except Exception:
+        pass
+    plan = propose_remediation(results)
     if json_out:
-        typer.echo(json.dumps(result, indent=2))
+        typer.echo(json.dumps({"scan": results, "remediation": plan}, indent=2))
         return
-    plan = result.get("remediation_plan")
-    if plan:
-        typer.echo(json.dumps(plan, indent=2))
-    else:
-        typer.echo("No remediation plan produced.")
+    summary = results.get("summary", {})
+    typer.echo(json.dumps(summary, indent=2))
+    typer.echo("\nRemediation plan (preview):")
+    typer.echo(json.dumps(plan, indent=2))
 
 
 @app.command()
@@ -52,6 +65,29 @@ def show_prompt() -> None:
 def version() -> None:
     """Show version information."""
     typer.echo("cyberzard version 0.1.0")
+
+
+@app.command()
+def advise(
+    json_out: bool = typer.Option(False, "--json", help="Output combined JSON"),
+    include_encrypted: bool = typer.Option(
+        False,
+        "--include-encrypted/--no-include-encrypted",
+        help="Search for encrypted-looking files",
+    ),
+) -> None:
+    """Run a scan and print concise provider-based advice."""
+    typer.echo("🧠 Generating advice from scan...")
+    results = scan_server(include_encrypted=include_encrypted)
+    try:
+        write_scan_snapshot(results)
+    except Exception:
+        pass
+    advice = summarize_advice(results)
+    if json_out:
+        typer.echo(json.dumps({"scan": results, "advice": advice}, indent=2))
+    else:
+        typer.echo(advice)
 
 
 def main() -> None:  # pragma: no cover

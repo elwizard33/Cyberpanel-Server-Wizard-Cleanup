@@ -17,7 +17,8 @@ SYSTEM_PROMPT: str = (
     "- Never perform destructive remediation automatically unless explicitly authorized.\n"
     "- Always offer a dry‑run summary of intended deletions / kills first.\n"
     "- Treat any path outside allowed roots (/etc /usr /var /tmp /home) as restricted unless user overrides.\n"
-    "- Provide shell-safe commands (quote paths).\n\n"
+    "- Provide shell-safe commands (quote paths).\n"
+    "- Do NOT download or execute remote binaries/scripts; only generate safe, dry-run command previews.\n\n"
     "Knowledge (2025): CyberPanel Django core at /usr/local/CyberCP, OpenLiteSpeed at /usr/local/lsws, sites in /home, MariaDB metadata, common compromise indicators: kinsing, xmrig, kdevtmpfsi, udiskssd, syshd, atdb, malicious cron entries, tampered /etc/ld.so.preload, fake systemd units.\n\n"
     "Output Style: Use concise JSON-like key blocks for structured data, otherwise succinct paragraphs."
 )
@@ -39,7 +40,7 @@ def get_tool_schemas() -> List[Dict[str, Any]]:
         },
         {
             "name": "scan_server",
-            "description": "Run IOC & miner indicator scan (non-destructive).",
+            "description": "Run non-destructive server scan: processes, known malicious file paths, optional encrypted-looking files, cron entries (suspicious patterns), systemd units (suspicious names/status), users & authorized_keys overview, ld.so.preload presence, and CyberPanel core file metadata.",
             "input_schema": {
                 "type": "object",
                 "properties": {
