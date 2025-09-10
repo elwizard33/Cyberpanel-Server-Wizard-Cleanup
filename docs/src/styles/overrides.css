@@ -4,19 +4,27 @@
 :root{
   /* default content width can be a bit tight on large screens; bump slightly */
   --sl-content-width: 50rem;
+  /* control scale for TOC width relative to Starlight's sidebar width */
+  --cz-toc-scale: 0.55; /* smaller = narrower TOC */
 }
 @media (min-width: 72rem){
-  /* Reduce right sidebar (TOC) computed width */
+  /* Reduce right sidebar (TOC) width on large screens */
   .right-sidebar-container.astro-67yu43on{
     /* Original is: calc(var(--sl-sidebar-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2) */
-    width: calc(var(--sl-sidebar-width) * 0.8);
+    width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale));
+    min-width: 12rem; /* keep usable */
   }
-  /* Ensure the main content stretches to use freed space */
+  /* Ensure internal container uses the same narrowed width to avoid overflow */
+  .right-sidebar-panel.astro-pb3aqygn .sl-container.astro-pb3aqygn{
+    width: calc((var(--sl-sidebar-width) * var(--cz-toc-scale)) - 2 * var(--sl-sidebar-pad-x));
+    max-width: calc(var(--sl-sidebar-width) * var(--cz-toc-scale));
+  }
+  /* Expand main content to use the freed space */
   [data-has-sidebar][data-has-toc] .main-pane.astro-67yu43on{
     /* Original is: width: calc(var(--sl-content-width) + (100% - var(--sl-content-width) - var(--sl-sidebar-width)) / 2) */
-    width: calc(var(--sl-content-width) + (100% - var(--sl-content-width) - (var(--sl-sidebar-width) * 0.8)) / 2);
+    width: calc(var(--sl-content-width) + (100% - var(--sl-content-width) - (var(--sl-sidebar-width) * var(--cz-toc-scale))) / 2);
   }
 }
 
 /* Slightly tighten link text in TOC for better density */
-.right-sidebar-panel.astro-pb3aqygn a{ line-height: 1.2; }
+.right-sidebar-panel.astro-pb3aqygn a{ line-height: 1.15; }
