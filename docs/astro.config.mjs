@@ -1,5 +1,6 @@
 import { defineConfig } from 'astro/config';
 import starlight from '@astrojs/starlight';
+import starlightSearch from '@astrojs/starlight/search';
 
 // GitHub Pages project site settings
 const repo = 'Cyberzard';
@@ -40,7 +41,9 @@ export default defineConfig({
           ],
         },
       ],
-      search: { provider: 'pagefind' },
     })
+  ,
+  // Enable built-in Starlight search (Pagefind)
+  starlightSearch()
   ]
 });
