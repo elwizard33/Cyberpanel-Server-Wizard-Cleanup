@@ -23,13 +23,26 @@ CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.c
 ```
 
 ### Install from Release (no git)
-Download the latest packaged wheel (.whl) from GitHub Releases and install:
+Install the latest packaged wheel from GitHub Releases (Linux/macOS):
 ```bash
-curl -fsSL -o cyberzard.whl \
-	https://github.com/elwizard33/Cyberzard/releases/latest/download/cyberzard-latest-py3-none-any.whl
-python3 -m pip install --user ./cyberzard.whl
+# Get latest tag via GitHub API and install the matching wheel
+TAG=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
+	| grep -oE '"tag_name"\s*:\s*"v[^"]+' | sed -E 's/.*"(v[^"]+)"/\1/') && \
+python3 -m pip install --user \
+	"https://github.com/elwizard33/Cyberzard/releases/download/${TAG}/cyberzard-${TAG#v}-py3-none-any.whl"
 # Note: extras are supported when installing from an index (e.g. PyPI). For wheel files, install extras separately if needed.
 ```
+
+Or download the file and keep its original filename, then install:
+```bash
+TAG=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
+	| grep -oE '"tag_name"\s*:\s*"v[^"]+' | sed -E 's/.*"(v[^"]+)"/\1/') && \
+curl -fsSL -L -O -J \
+	"https://github.com/elwizard33/Cyberzard/releases/download/${TAG}/cyberzard-${TAG#v}-py3-none-any.whl" && \
+python3 -m pip install --user "./cyberzard-${TAG#v}-py3-none-any.whl"
+```
+
+Important: don’t rename the wheel file. Pip relies on the filename to parse version/metadata.
 
 Alternatively, pin a specific versioned wheel:
 ```bash
