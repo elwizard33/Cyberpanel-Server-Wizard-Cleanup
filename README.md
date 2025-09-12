@@ -117,6 +117,16 @@ cyberzard chat --auto-approve --max-probes 8
 
 # Remediation (requires explicit flags)
 cyberzard remediate --delete --kill --preserve
+
+# n8n deployment assistant (generate + optional apply)
+# Native (OpenLiteSpeed reverse-proxy):
+cyberzard n8n-setup --domain example.com --subdomain n8n --mode native --basic-auth --out-dir ./out
+
+# Cloudflare Tunnel (docker compose + cloudflared):
+cyberzard n8n-setup --domain example.com --subdomain n8n --mode tunnel --out-dir ./out
+
+# Write-only JSON summary (no apply):
+cyberzard n8n-setup --domain example.com --mode native --write-only --out-dir ./out --overwrite
 ```
 
 Troubleshooting

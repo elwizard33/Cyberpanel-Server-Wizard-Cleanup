@@ -23,6 +23,18 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Dry-run default safety
 
 ## [Unreleased]
+### Planned
 - Extended composite heuristics
 - Delta scan caching
 - YARA integration (optional)
+
+## [0.1.4] - 2025-09-12
+### Added
+- New `n8n-setup` command to guide n8n deployment on CyberPanel
+	- Generates native (OpenLiteSpeed reverse-proxy) or tunnel (docker compose + cloudflared) scripts
+	- Optional apply step with idempotent execution and Rich-styled feedback
+	- Safe handling of secrets (redacted in JSON output)
+### Docs
+- New "n8n Setup" page with quick start, options, and troubleshooting
+- Sidebar TOC updated to include n8n Setup
+- Introduction updated to reflect long-term goal: beyond security toward a general-purpose CyberPanel assistant

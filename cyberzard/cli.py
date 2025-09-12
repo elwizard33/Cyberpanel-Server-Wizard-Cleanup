@@ -18,6 +18,18 @@ from .evidence import write_scan_snapshot  # will no-op if not implemented
 from .ui import render_scan_output, render_advice_output
 from .agent_engine.verify import verify_plan
 from .chat import run_chat
+from .n8n_setup import (
+    collect_preferences,
+    validate_environment,
+    generate_native_script,
+    generate_tunnel_script,
+    generate_update_script_native,
+    generate_update_script_tunnel,
+    write_script,
+    sanitize_prefs_for_json,
+    apply_native,
+    apply_tunnel,
+)
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
 
@@ -289,6 +301,79 @@ def chat(
     if not sys.stdout.isatty() or os.getenv("NO_COLOR") in {"1", "true", "TRUE"}:
         typer.echo("Chat mode is best used in an interactive terminal (TTY).")
     run_chat(verify=verify, auto_approve=auto_approve, max_probes=max_probes)
+
+
+@app.command("n8n-setup")
+def n8n_setup(
+    domain: str = typer.Option(..., "--domain", help="Root domain, e.g., example.com"),
+    subdomain: str = typer.Option("n8n", "--subdomain", help="Subdomain to use for n8n"),
+    mode: str = typer.Option("native", "--mode", help="Deployment mode: native or tunnel", case_sensitive=False),
+    port: int = typer.Option(5678, "--port", help="Local port to bind n8n"),
+    basic_auth: bool = typer.Option(False, "--basic-auth/--no-basic-auth", help="Enable HTTP Basic Auth for n8n"),
+    basic_auth_user: str = typer.Option("admin", "--basic-user", help="Basic auth username"),
+    timezone: str = typer.Option("UTC", "--tz", help="Timezone for n8n"),
+    n8n_image: str = typer.Option("n8nio/n8n:latest", "--n8n-image", help="n8n image"),
+    postgres_image: str = typer.Option("postgres:16", "--postgres-image", help="Postgres image"),
+    write_only: bool = typer.Option(False, "--write-only", help="Only write scripts; do not execute"),
+    out_dir: Optional[str] = typer.Option(None, "--out-dir", help="Directory to write scripts to"),
+    overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing files when writing"),
+) -> None:
+    """Guide-and-generate scripts to deploy n8n on CyberPanel, optionally applying them."""
+    # Aggregate preferences
+    provided = {
+        "domain": domain,
+        "subdomain": subdomain,
+        "mode": mode.lower().strip(),
+        "port": port,
+        "basic_auth": basic_auth,
+        "basic_auth_user": basic_auth_user,
+        "timezone": timezone,
+        "n8n_image": n8n_image,
+        "postgres_image": postgres_image,
+    }
+    prefs, warns, errs = collect_preferences(interactive=False, provided=provided)
+    w2, e2 = validate_environment(prefs)
+    warns += w2
+    errs += e2
+    if errs:
+        typer.echo("Errors:\n" + "\n".join(f" - {e}" for e in errs))
+        raise typer.Exit(code=2)
+    if warns:
+        typer.echo("Warnings:\n" + "\n".join(f" - {w}" for w in warns))
+
+    # Generate scripts
+    mode_val = prefs["mode"] or "native"
+    if mode_val not in {"native", "tunnel"}:
+        typer.echo("Invalid mode; expected native or tunnel")
+        raise typer.Exit(code=2)
+    setup_script = generate_native_script(prefs) if mode_val == "native" else generate_tunnel_script(prefs)
+    update_script = generate_update_script_native(prefs) if mode_val == "native" else generate_update_script_tunnel(prefs)
+
+    # Write scripts
+    paths = []
+    if out_dir:
+        os.makedirs(out_dir, exist_ok=True)
+        setup_path = os.path.join(out_dir, f"n8n_setup_{mode_val}.sh")
+        update_path = os.path.join(out_dir, f"n8n_update_{mode_val}.sh")
+        paths.append(write_script(setup_path, setup_script, overwrite=overwrite))
+        paths.append(write_script(update_path, update_script, overwrite=overwrite))
+        typer.echo("Wrote scripts:\n" + "\n".join(f" - {p}" for p in paths))
+
+    if write_only:
+        payload = {"prefs": sanitize_prefs_for_json(prefs), "scripts": paths or ["<temp>"]}
+        typer.echo(json.dumps(payload, indent=2))
+        return
+
+    # Apply
+    if mode_val == "native":
+        ok, path = apply_native(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
+    else:
+        ok, path = apply_tunnel(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
+    if ok:
+        typer.echo(f"✅ Applied {mode_val} setup (script at: {path})")
+        return
+    typer.echo(f"❌ Apply failed: {path}")
+    raise typer.Exit(code=1)
 
 
 def main() -> None:  # pragma: no cover

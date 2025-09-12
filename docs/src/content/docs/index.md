@@ -1,12 +1,12 @@
 ---
 title: Introduction
-description: Overview of the Cyberzard AI-assisted CyberPanel security CLI
+description: Cyberzard is an AI-assisted CLI for CyberPanel — focused on security today, aiming to help with all things CyberPanel tomorrow
 ---
 
-Welcome to Cyberzard. This guide teaches you how to secure and triage a CyberPanel server using an AI‑assisted CLI.
+Welcome to Cyberzard. Today, it helps you secure and triage a CyberPanel server using an AI‑assisted CLI. Our goal is broader: become your general-purpose CyberPanel assistant for setup, operations, and automation — while keeping safety and reviewability front and center.
 
 ## What Cyberzard Does
-Cyberzard accelerates incident triage by combining deterministic scanners (processes, files, cron, users, SSH keys) with an optional constrained ReAct agent that can summarize and advise without arbitrary shell access.
+Cyberzard accelerates incident triage by combining deterministic scanners (processes, files, cron, users, SSH keys) with an optional constrained ReAct agent that can summarize and advise without arbitrary shell access. Beyond security, assistants are emerging for everyday operations, like deploying services (see the new n8n setup assistant).
 
 ## Feature Highlights
 | Area | Capability | Notes |
@@ -17,5 +17,5 @@ Cyberzard accelerates incident triage by combining deterministic scanners (proce
 | Safety | Tool allowlist, step cap | No raw shell exposed |
 | Chat | Interactive, permission‑aware | See [Chat mode](./chat/) |
 
-Next: Read the [Installation](./installation) page, then try the [Chat mode](./chat/).
+Next: Read the [Installation](./installation) page, then try the [Chat mode](./chat/). If you want to deploy n8n, check out [n8n Setup](./n8n-setup/).
 

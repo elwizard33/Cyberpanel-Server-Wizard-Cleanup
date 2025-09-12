@@ -28,6 +28,7 @@ export default defineConfig({
           items: [
             { label: 'Installation', link: '/installation/' },
             { label: 'Commands', link: '/commands/' },
+            { label: 'n8n Setup', link: '/n8n-setup/' },
             { label: 'Chat mode', link: '/chat/' },
             { label: 'Configuration', link: '/configuration/' },
           ],
