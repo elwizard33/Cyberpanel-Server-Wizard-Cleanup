@@ -64,6 +64,7 @@ Modern incident triage for CyberPanel:
 | ReAct loop | Safe tool schema, sandboxed helpers |
 | Output | Pretty tables + JSON |
 | Chat mode | Interactive, permission‑aware assistant | Focused on CyberPanel |
+| Email stack hardening | scan + AI summary + guided execution | `email-security`, `email-fix` |
 
 ### Install & Use
 
@@ -127,6 +128,18 @@ cyberzard n8n-setup --domain example.com --subdomain n8n --mode tunnel --out-dir
 
 # Write-only JSON summary (no apply):
 cyberzard n8n-setup --domain example.com --mode native --write-only --out-dir ./out --overwrite
+
+# Email security (scan + hardening preview)
+cyberzard email-security --dry-run
+
+# Execute guided (still dry-run by default until --no-dry-run)
+cyberzard email-security --run --dry-run --max-risk medium
+
+# Full remediation guide + optional execution
+cyberzard email-fix --run --dry-run --max-risk low
+
+# JSON output (no rich)
+cyberzard email-security --json --run --dry-run
 ```
 
 Troubleshooting

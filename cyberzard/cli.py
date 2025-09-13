@@ -12,7 +12,12 @@ import os
 import typer
 
 from .agent import run_agent, SYSTEM_PROMPT
-from .agent_engine.tools import scan_server, propose_remediation
+from .agent_engine.tools import scan_server, propose_remediation, scan_email_system, propose_email_hardening
+from .agent_engine import (
+    summarize_email_security,
+    generate_email_fix_guide,
+)
+from .email_execute import run_guided
 from .agent_engine.provider import summarize as summarize_advice
 from .evidence import write_scan_snapshot  # will no-op if not implemented
 from .ui import render_scan_output, render_advice_output
@@ -288,6 +293,123 @@ def advise(
             except Exception:
                 pass
         typer.echo(advice)
+
+
+@app.command("email-security")
+def email_security(
+    domain: Optional[str] = typer.Option(None, "--domain", help="Root domain (for DNS mismatch heuristics)"),
+    json_out: bool = typer.Option(False, "--json", help="Output full JSON"),
+    max_risk: str = typer.Option("high", "--max-risk", help="Maximum risk level to include: low|medium|high"),
+    auto_approve: bool = typer.Option(False, "--auto-approve", help="Skip confirmation prompts (non-interactive)"),
+    dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Simulate actions without executing commands"),
+    run: bool = typer.Option(False, "--run", help="Execute actions after scan (guided)"),
+    ai_refine: bool = typer.Option(True, "--ai-refine/--no-ai-refine", help="Attempt AI refinement on failures"),
+) -> None:
+    """Scan CyberPanel email stack and optionally run guided hardening."""
+    typer.echo("📧 Scanning email stack...")
+    scan = scan_email_system(domain=domain)
+    plan = propose_email_hardening(scan)
+    provider_enabled = (os.getenv("CYBERZARD_MODEL_PROVIDER") or "none").lower().strip() in {"openai", "anthropic"}
+    summary_txt = summarize_email_security(scan, plan) if provider_enabled else None
+    if run:
+        actions = plan.get("plan", {}).get("actions", [])
+        exec_result = run_guided(
+            actions,
+            interactive=sys.stdout.isatty(),
+            auto_approve=auto_approve,
+            max_risk=max_risk,
+            dry_run=dry_run,
+            ai_refine=ai_refine,
+            scan_results=scan,
+            provider_enabled=provider_enabled,
+            fail_fast=False,
+            timeout=90,
+        )
+    else:
+        exec_result = None
+    if json_out:
+        payload = {"scan": scan, "plan": plan, "summary": summary_txt}
+        if exec_result:
+            payload["execution"] = exec_result
+        typer.echo(json.dumps(payload, indent=2))
+        return
+    use_rich = sys.stdout.isatty() and os.getenv("NO_COLOR") not in {"1", "true", "TRUE"}
+    if use_rich:
+        try:
+            from .ui import render_email_security, render_email_execution_progress
+            render_email_security(scan, plan, summary_txt)
+            if exec_result:
+                render_email_execution_progress(exec_result.get("executions", []), exec_result.get("summary", {}))
+            return
+        except Exception:
+            pass
+    # Plain fallback
+    s = scan.get("summary", {})
+    typer.echo(json.dumps(s, indent=2))
+    if summary_txt:
+        typer.echo("\nAI Summary:\n" + summary_txt)
+    if exec_result:
+        typer.echo("\nExecution Summary:")
+        typer.echo(json.dumps(exec_result.get("summary", {}), indent=2))
+
+
+@app.command("email-fix")
+def email_fix(
+    domain: Optional[str] = typer.Option(None, "--domain", help="Root domain (for DNS mismatch heuristics)"),
+    json_out: bool = typer.Option(False, "--json", help="Output JSON"),
+    max_risk: str = typer.Option("high", "--max-risk", help="Maximum risk level: low|medium|high"),
+    auto_approve: bool = typer.Option(False, "--auto-approve", help="Skip confirmation prompts"),
+    dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Simulate actions without executing commands"),
+    run: bool = typer.Option(True, "--run/--no-run", help="Execute actions (guided)"),
+    ai_refine: bool = typer.Option(True, "--ai-refine/--no-ai-refine", help="Attempt AI refinement on failures"),
+) -> None:
+    """Generate full email remediation guide and optionally run guided execution."""
+    typer.echo("🛠 Generating email fix guide...")
+    scan = scan_email_system(domain=domain)
+    plan = propose_email_hardening(scan)
+    provider_enabled = (os.getenv("CYBERZARD_MODEL_PROVIDER") or "none").lower().strip() in {"openai", "anthropic"}
+    guide = generate_email_fix_guide(scan, plan) if provider_enabled else None
+    exec_result = None
+    if run:
+        actions = plan.get("plan", {}).get("actions", [])
+        exec_result = run_guided(
+            actions,
+            interactive=sys.stdout.isatty(),
+            auto_approve=auto_approve,
+            max_risk=max_risk,
+            dry_run=dry_run,
+            ai_refine=ai_refine,
+            scan_results=scan,
+            provider_enabled=provider_enabled,
+            fail_fast=False,
+            timeout=90,
+        )
+    if json_out:
+        payload = {"scan": scan, "plan": plan, "guide": guide}
+        if exec_result:
+            payload["execution"] = exec_result
+        typer.echo(json.dumps(payload, indent=2))
+        return
+    use_rich = sys.stdout.isatty() and os.getenv("NO_COLOR") not in {"1", "true", "TRUE"}
+    if use_rich:
+        try:
+            from .ui import render_email_security, render_email_execution_progress, render_email_fix
+            render_email_security(scan, plan, None)
+            if guide:
+                render_email_fix(guide)
+            if exec_result:
+                render_email_execution_progress(exec_result.get("executions", []), exec_result.get("summary", {}))
+            return
+        except Exception:
+            pass
+    # Plain fallback
+    s = scan.get("summary", {})
+    typer.echo(json.dumps(s, indent=2))
+    if guide:
+        typer.echo("\nGuide:\n" + guide[:4000])
+    if exec_result:
+        typer.echo("\nExecution Summary:")
+        typer.echo(json.dumps(exec_result.get("summary", {}), indent=2))
 
 
 @app.command()

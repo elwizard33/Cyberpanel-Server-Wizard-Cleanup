@@ -125,4 +125,86 @@ def render_verified_output(results: Dict[str, Any], verification: Dict[str, Any]
         cons.print(Panel(t2, title="Downgraded (manual review)", border_style="yellow"))
 
 
-__all__ = ["render_scan_output", "render_advice_output", "render_verified_output"]
+def render_email_security(scan: Dict[str, Any], plan: Dict[str, Any], summary_text: str | None = None) -> None:
+    """Render email security scan + plan preview.
+
+    Fallback: if Rich import failed earlier (unlikely), do naive prints.
+    """
+    try:
+        cons = _console()
+    except Exception:  # pragma: no cover
+        s = (scan or {}).get("summary", {})
+        print("Email Security Scan")
+        print(f"Queue size: {s.get('queue_size')} backlog={s.get('queue_backlog')}")
+        print(f"SASL failures: {s.get('sasl_failures')}")
+        return
+    s = (scan or {}).get("summary", {})
+    cons.print(Panel(Text("Email security scan", style="title"), border_style="cyan"))
+    cons.print(_summary_table({
+        "failed_services": s.get("failed_services_count"),
+        "queue_size": s.get("queue_size"),
+        "queue_backlog": s.get("queue_backlog"),
+        "sasl_failures": s.get("sasl_failures"),
+        "dns_mismatch": s.get("dns_mismatch"),
+        "fail2ban_active": s.get("fail2ban_active"),
+        "tls_hardened": s.get("tls_hardened"),
+        "rate_limited": s.get("rate_limited"),
+    }))
+    if summary_text:
+        cons.print(Panel(summary_text, title="AI Summary", border_style="green"))
+    plan_obj = plan.get("plan", {}) if isinstance(plan, dict) else {}
+    actions = plan_obj.get("actions", [])
+    total = plan_obj.get("total_actions", len(actions))
+    cons.print(Panel(Text(f"Hardening preview • {total} actions", style="title"), border_style="cyan"))
+    if actions:
+        cons.print(_actions_table(actions, limit=12))
+    else:
+        cons.print(Text("No suggested actions", style="info"))
+
+
+def render_email_execution_progress(executions: List[Dict[str, Any]], summary: Dict[str, Any]) -> None:
+    """Render progress/results of guided execution."""
+    try:
+        cons = _console()
+    except Exception:  # pragma: no cover
+        print("Email Execution Summary:", summary)
+        return
+    cons.print(Panel(Text("Email remediation execution", style="title"), border_style="cyan"))
+    cons.print(_summary_table(summary))
+    table = Table(show_header=True, header_style="bold magenta")
+    table.add_column("Type")
+    table.add_column("Risk")
+    table.add_column("Status")
+    table.add_column("Refined")
+    table.add_column("Unsafe/Skip")
+    for ex in executions[:30]:
+        status = "dry-run" if ex.get("dry_run") else ("ok" if ex.get("success") else ("fail" if ex.get("success") is False else "?"))
+        row = [
+            str(ex.get("type")),
+            str(ex.get("risk")),
+            status,
+            "yes" if ex.get("refinement_success") else ("attempt" if ex.get("refinement_attempted") else ""),
+            "unsafe" if ex.get("unsafe") else ("skipped" if ex.get("skipped") else ""),
+        ]
+        table.add_row(*row)
+    cons.print(table)
+
+
+def render_email_fix(guide_markdown: str) -> None:
+    """Render email fix guide (markdown simplified)."""
+    try:
+        from rich.markdown import Markdown  # local import to avoid heavy cost if unused
+        cons = _console()
+        cons.print(Markdown(guide_markdown[:8000]))
+    except Exception:  # pragma: no cover
+        print(guide_markdown[:8000])
+
+
+__all__ = [
+    "render_scan_output",
+    "render_advice_output",
+    "render_verified_output",
+    "render_email_security",
+    "render_email_execution_progress",
+    "render_email_fix",
+]

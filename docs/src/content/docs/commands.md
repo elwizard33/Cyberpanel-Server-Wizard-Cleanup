@@ -77,6 +77,8 @@ Run `cyberzard --help` for full list.
 | `show-prompt` | Print the agent system prompt | — |
 | `version` | Show version | — |
 | `upgrade` | Self-update from git checkout | — |
+| `email-security` | Email stack scan + hardening preview / guided exec | `--json`, `--run`, `--dry-run/--no-dry-run`, `--max-risk` |
+| `email-fix` | Full email remediation guide + optional execution | `--json`, `--run`, `--dry-run/--no-dry-run`, `--max-risk` |
 
 ## Chat
 
