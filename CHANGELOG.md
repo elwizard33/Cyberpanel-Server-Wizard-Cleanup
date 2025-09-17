@@ -56,7 +56,7 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Sidebar TOC updated to include n8n Setup
 - Introduction updated to reflect long-term goal: beyond security toward a general-purpose CyberPanel assistant
 
-## [1.0.1] - 2025-09-17
+## [0.1.6] - 2025-09-17
 ### Added
 - LangChain tools agent powering `cyberzard chat` with safe tool calls (run, debug, and complete shell commands via constrained tools)
 - SQLite-backed conversation history with per-session isolation (`--session <id>`)
