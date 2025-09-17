@@ -5,7 +5,7 @@ description: Interactive, permission-aware chat for CyberPanel anomaly hunting
 
 # Chat mode
 
-Cyberzard’s chat mode gives you an interactive, on-mission assistant focused on CyberPanel anomaly detection. It uses a safe, permission-gated set of tools and a readable Rich UI.
+Cyberzard’s chat mode gives you an interactive, on-mission assistant focused on CyberPanel anomaly detection. It uses a safe, permission-gated set of tools, persisted conversation memory (SQLite), and a readable TTY UI.
 
 ## What it does
 
@@ -13,6 +13,7 @@ Cyberzard’s chat mode gives you an interactive, on-mission assistant focused o
 - Runs safe, read-only checks with your explicit approval
 - Summarizes results and shows a remediation preview
 - Optionally verifies suggested actions with bounded, consented probes
+- Persists conversations locally (SQLite) so you can resume where you left off
 
 ## Start chat
 
@@ -25,21 +26,34 @@ Helpful flags:
 - `--verify/--no-verify`: enable AI/heuristic verification of actions (default: verify)
 - `--auto-approve`: auto-consent to safe, read-only probes (no prompts)
 - `--max-probes N`: cap total verification probes (default: 5)
+- `--session ID`: name the conversation session (history is stored per session)
 
 Examples:
 
 ```bash
 cyberzard chat --no-verify
 cyberzard chat --auto-approve --max-probes 8
+cyberzard chat --session ops
 ```
 
 ## In-chat commands
 
-- `scan` — run a quick IOC scan (files, processes, cron, systemd, users, keys)
-- `plan` — show a remediation plan preview (optionally verified)
-- `read /path` — read a file preview (permission-gated, read-only)
-- `help` — quick tips
-- `quit` — exit chat
+Core navigation and memory:
+- `/history [n]` — show the last n messages in the current session (default: 10)
+- `/clear` — clear the conversation history for the current session
+- `/sessions` — list available session IDs (from local SQLite store)
+- `/switch <id>` — switch to another session (created on first use)
+
+Examples:
+```text
+/sessions
+/switch ops
+/history 5
+```
+
+Notes:
+- Session data is stored locally in `cyberzard_agent.sqlite` next to the CLI.
+- If you want separate contexts (e.g., prod vs. staging), use different sessions.
 
 ## Permissions & safety
 

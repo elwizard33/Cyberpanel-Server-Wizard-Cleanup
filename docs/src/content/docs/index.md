@@ -19,3 +19,18 @@ Cyberzard accelerates incident triage by combining deterministic scanners (proce
 
 Next: Read the [Installation](./installation) page, then try the [Chat mode](./chat/). If you want to deploy n8n, check out [n8n Setup](./n8n-setup/).
 
+## Chat quick start
+
+```bash
+cyberzard chat
+```
+
+Helpful flags:
+
+- `--session <id>` keep separate histories (SQLite-backed)
+- `--verify/--no-verify` enable verification of suggested actions
+- `--auto-approve` allow safe read-only probes without prompting
+- `--max-probes N` cap verification probes (default: 5)
+
+See the full guide: [Chat mode](./chat/)
+

@@ -5,220 +5,180 @@ from typing import Any, Callable, Dict, List, Optional
 import os
 import sys
 
-from rich.console import Console
-from rich.panel import Panel
-from rich.table import Table
-from rich.prompt import Prompt, Confirm
-from rich.text import Text
-from rich.theme import Theme
 
-from .agent_engine.tools import read_file, scan_server, propose_remediation
-from .agent_engine.verify import verify_plan
-from .agent_engine.provider import summarize as summarize_advice
+# --- LangChain/LangGraph agent integration ---
+import subprocess
+from langchain.agents import create_openai_tools_agent as create_agent
+from langchain.tools import tool
+from langchain_community.chat_message_histories import SQLChatMessageHistory
+from langchain_openai import ChatOpenAI
+from langchain_core.prompts import ChatPromptTemplate, MessagesPlaceholder
+from langchain_core.messages import HumanMessage, AIMessage, BaseMessage
+import sqlite3
 
+# Tool: run shell command
+@tool
+def run_shell_command(command: str) -> str:
+    """Run a shell command and return its output."""
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        return result.stdout if result.returncode == 0 else result.stderr
+    except Exception as e:
+        return f"Error: {e}"
 
-THEME = Theme({
-    "user": "bold cyan",
-    "assistant": "bold green",
-    "tool": "magenta",
-    "title": "bold blue",
-    "info": "dim",
-    "warn": "yellow",
-    "err": "red",
-})
+# Tool: debug shell command
+@tool
+def debug_shell_command(command: str) -> str:
+    """Debug a shell command and suggest a fix."""
+    # Simple heuristic: check for common errors
+    try:
+        result = subprocess.run(command, shell=True, capture_output=True, text=True, timeout=30)
+        if result.returncode == 0:
+            return "Command executed successfully."
+        err = result.stderr
+        if "not found" in err:
+            return f"Error: Command not found. Did you mean to install it?"
+        if "permission denied" in err.lower():
+            return "Error: Permission denied. Try running with sudo or check file permissions."
+        return f"Error: {err}"
+    except Exception as e:
+        return f"Exception: {e}"
 
+# Tool: complete shell command
+@tool
+def complete_shell_command(partial: str) -> str:
+    """Suggest a completion for a partial shell command."""
+    # Simple completion: suggest 'ls', 'cat', 'echo', etc.
+    common_cmds = ["ls", "cat", "echo", "grep", "find", "pwd", "cd", "touch", "rm", "cp", "mv"]
+    for cmd in common_cmds:
+        if cmd.startswith(partial):
+            return f"Did you mean: {cmd} ...?"
+    return "No suggestion."
 
-def _console() -> Console:
-    return Console(theme=THEME, soft_wrap=True)
+# SQLite database path for chat history persistence
+DB_PATH = "cyberzard_agent.sqlite"
 
+def _list_sessions() -> list[str]:
+    try:
+        import sqlite3
+        conn = sqlite3.connect(DB_PATH)
+        cur = conn.cursor()
+        # SQLChatMessageHistory default table is 'message_store' with columns including 'session_id'
+        cur.execute("SELECT DISTINCT session_id FROM message_store ORDER BY session_id")
+        rows = cur.fetchall()
+        conn.close()
+        return [r[0] for r in rows if r and r[0]]
+    except Exception:
+        return []
 
-@dataclass
-class PermissionState:
-    auto_approve: bool = False
-    remembered: Dict[str, bool] = field(default_factory=dict)  # tool_name -> allowed
+model = ChatOpenAI(temperature=0)
+system_prompt = "You are a helpful CLI agent that can run, debug, and complete shell commands. Use tools to assist the user."
 
-    def ask(self, tool: str, description: str) -> bool:
-        if self.auto_approve:
-            return True
-        if not sys.stdout.isatty() or os.getenv("NO_COLOR") in {"1", "true", "TRUE"}:
-            # Non-interactive or color-less terminals default to deny for safety
-            return False
-        if tool in self.remembered:
-            return self.remembered[tool]
-        cons = _console()
-        cons.print(Panel(f"Tool request: [bold]{tool}[/] — {description}\nAllow once or remember?", title="Permission", border_style="yellow"))
-        allow = Confirm.ask("Allow this tool now?", default=True)
-        if allow:
-            remember = Confirm.ask("Remember this approval for the session?", default=True)
-            if remember:
-                self.remembered[tool] = True
-            return True
-        else:
-            remember_deny = Confirm.ask("Remember deny for the session?", default=False)
-            if remember_deny:
-                self.remembered[tool] = False
-            return False
+# Build a proper chat prompt template for the tools agent
+prompt = ChatPromptTemplate.from_messages([
+    ("system", system_prompt),
+    MessagesPlaceholder("messages"),
+])
 
+agent = create_agent(
+    model,
+    [run_shell_command, debug_shell_command, complete_shell_command],
+    prompt,
+)
 
-def _bubble(role: str, content: str) -> Panel:
-    style = {
-        "user": "user",
-        "assistant": "assistant",
-        "tool": "tool",
-    }.get(role, "info")
-    title = role.capitalize()
-    return Panel(Text(content, style=style), title=title, border_style=style)
-
-
-def _actions_preview_table(plan: Dict[str, Any]) -> Optional[Table]:
-    if not isinstance(plan, dict):
-        return None
-    p = plan.get("plan", {}) if "plan" in plan else plan
-    acts = p.get("actions", []) if isinstance(p, dict) else []
-    if not acts:
-        return None
-    t = Table(show_header=True, header_style="bold magenta")
-    t.add_column("Type", style="info")
-    t.add_column("Target")
-    t.add_column("Risk")
-    for a in acts[:10]:
-        t.add_row(str(a.get("type", "")), str(a.get("target", ""))[:60], str(a.get("risk", "")))
-    return t
-
-
-def _intent(query: str) -> str:
-    q = query.strip().lower()
-    if q in {"quit", "exit", ":q", "/q", "/quit", "/exit"}:
-        return "quit"
-    if q in {"help", "/help"}:
-        return "help"
-    if any(k in q for k in ["scan", "check", "investigate", "ioc", "miner", "malware", "backdoor"]):
-        return "scan"
-    if q.startswith("read ") or q.startswith("open "):
-        return "read"
-    if any(k in q for k in ["remediation", "plan", "fix", "actions"]):
-        return "plan"
-    return "chat"
-
-
-def run_chat(verify: bool = True, auto_approve: bool = False, max_probes: int = 5) -> None:
-    """Interactive, Rich-powered chat focused on CyberPanel anomaly hunting.
-
-    Tools are permission-gated and read-only by default. The assistant stays on-task.
-    """
-    cons = _console()
-    cons.print(Panel("Cyberzard chat — focused on CyberPanel anomaly detection.\nType 'scan' to start, 'help' for tips, 'quit' to exit.", title="Welcome", border_style="cyan"))
-
-    perms = PermissionState(auto_approve=auto_approve)
-    last_scan: Optional[Dict[str, Any]] = None
-    last_plan: Optional[Dict[str, Any]] = None
-
+def run_chat(verify: bool = True, auto_approve: bool = False, max_probes: int = 5, session_id: str = "default") -> None:
+    print(f"Cyberzard AI Chat (LangChain agent) [session: {session_id}]. Type 'quit' to exit. Commands: /clear, /history [n], /sessions, /switch <id> - chat.py:90")
+    # Create a chat history instance for this session
+    chat_history = SQLChatMessageHistory(session_id=session_id, connection_string=f"sqlite:///{DB_PATH}")
     while True:
         try:
-            user = Prompt.ask("[bold cyan]You[/]")
+            user = input("You: ")
         except (KeyboardInterrupt, EOFError):
-            cons.print("\nGoodbye.")
+            print("\nGoodbye. - chat.py:97")
             break
         if not user.strip():
             continue
-        cons.print(_bubble("user", user))
-        intent = _intent(user)
-
-        if intent == "quit":
-            cons.print("Exiting chat.")
+        if user.strip().lower() in {"quit", "exit", ":q", "/q"}:
+            print("Exiting chat. - chat.py:102")
             break
-        if intent == "help":
-            cons.print(_bubble("assistant", "Commands: scan • read <path> • plan • quit\nTips: Start with 'scan' to collect IOCs. Then ask for 'plan' or 'advice'."))
-            continue
-
-        if intent == "read":
-            # read <path>
-            path = user.split(" ", 1)[1].strip() if " " in user else ""
-            if not path:
-                cons.print(_bubble("assistant", "Please provide a path, e.g. 'read /etc/passwd'."))
-                continue
-            if not perms.ask("read_file", f"Read contents of {path} (read-only)"):
-                cons.print(_bubble("assistant", "Denied. I won't read that file."))
-                continue
+        # Built-in commands
+        if user.strip().startswith("/clear"):
             try:
-                data = read_file(path=path)
-                preview = (data.get("content", "") or "")[:2000]
-                cons.print(_bubble("tool", f"read_file({path})\n---\n{preview}"))
-            except Exception as e:  # pragma: no cover
-                cons.print(_bubble("assistant", f"Error reading file: {e}"))
-            continue
-
-        if intent == "scan":
-            if not perms.ask("scan_server", "Run quick IOC scan (read-only) with encrypted-file checks"):
-                cons.print(_bubble("assistant", "Denied. No scan was run."))
-                continue
-            last_scan = scan_server(include_encrypted=True)
-            cons.print(_bubble("tool", "scan_server(include_encrypted=True) → collected summary."))
-            # Optional verification of remediation plan
-            last_plan = propose_remediation(last_scan)
-            if verify:
-                try:
-                    ver = verify_plan(
-                        last_scan,
-                        last_plan,
-                        allow_probes=perms.auto_approve or sys.stdout.isatty(),
-                        max_probes=max_probes,
-                        consent_callback=lambda category: perms.ask(
-                            f"probe:{category}", f"Run up to {max_probes} safe probes for {category}"
-                        ),
-                    )
-                except Exception:
-                    ver = None
-                if ver and ver.get("success"):
-                    # Replace plan preview with verified plan
-                    last_plan = ver.get("verified_plan", last_plan)
-                    dropped = ver.get("dropped") or []
-                    downgraded = ver.get("downgraded") or []
-                    cons.print(_bubble("assistant", f"Scan complete. Verified plan ready (kept {last_plan.get('total_actions', 0)}). Dropped {len(dropped)}, downgraded {len(downgraded)}."))
-                else:
-                    cons.print(_bubble("assistant", "Scan complete. Verification unavailable, showing raw plan."))
-            else:
-                cons.print(_bubble("assistant", "Scan complete. Showing plan preview."))
-
-            # Show short plan preview and AI summary if possible
-            if last_plan:
-                table = _actions_preview_table(last_plan)
-                if table:
-                    cons.print(Panel(table, title="Remediation preview"))
-            try:
-                if last_scan:
-                    advice = summarize_advice(last_scan)
-                    cons.print(Panel(advice, title="AI advice", border_style="green"))
+                # Best effort clear
+                chat_history.clear()
+                print("History cleared. - chat.py:109")
             except Exception:
-                pass
-            continue
-
-        if intent == "plan":
-            if not last_scan:
-                cons.print(_bubble("assistant", "No scan yet. Say 'scan' first."))
-                continue
-            last_plan = propose_remediation(last_scan)
-            if verify:
+                # Fallback: re-init local history
                 try:
-                    ver = verify_plan(
-                        last_scan,
-                        last_plan,
-                        allow_probes=perms.auto_approve or sys.stdout.isatty(),
-                        max_probes=max_probes,
-                        consent_callback=lambda category: perms.ask(
-                            f"probe:{category}", f"Run up to {max_probes} safe probes for {category}"
-                        ),
-                    )
-                    if ver and ver.get("success"):
-                        last_plan = ver.get("verified_plan", last_plan)
+                    chat_history = SQLChatMessageHistory(session_id=session_id, connection_string=f"sqlite:///{DB_PATH}")
+                    print("History reset. - chat.py:114")
                 except Exception:
-                    pass
-            table = _actions_preview_table(last_plan or {})
-            if table:
-                cons.print(Panel(table, title="Remediation plan", border_style="cyan"))
-            else:
-                cons.print(_bubble("assistant", "No actions suggested."))
+                    print("Unable to clear history. - chat.py:116")
             continue
+        if user.strip().startswith("/history"):
+            parts = user.strip().split()
+            try:
+                n = int(parts[1]) if len(parts) > 1 else 10
+            except Exception:
+                n = 10
+            msgs: list[BaseMessage] = chat_history.messages or []
+            for m in msgs[-n:]:
+                role = "assistant" if m.type == "ai" else ("user" if m.type == "human" else m.type)
+                content = getattr(m, "content", "")
+                print(f"{role}> {content} - chat.py:128")
+            continue
+        if user.strip().startswith("/sessions"):
+            sessions = _list_sessions()
+            if not sessions:
+                print("No sessions found. - chat.py:133")
+            else:
+                print("Sessions: - chat.py:135")
+                for s in sessions:
+                    marker = "*" if s == session_id else " "
+                    print(f"{marker} {s} - chat.py:138")
+            continue
+        if user.strip().startswith("/switch"):
+            parts = user.strip().split(maxsplit=1)
+            if len(parts) < 2 or not parts[1].strip():
+                print("Usage: /switch <session_id> - chat.py:143")
+                continue
+            new_id = parts[1].strip()
+            try:
+                chat_history = SQLChatMessageHistory(session_id=new_id, connection_string=f"sqlite:///{DB_PATH}")
+                session_id = new_id
+                print(f"Switched to session: {session_id} - chat.py:149")
+            except Exception as e:
+                print(f"Unable to switch session: {e} - chat.py:151")
+            continue
+        # Agent invocation
+        # Load history (list[BaseMessage]) and append the current user message
+        history_messages: list[BaseMessage] = chat_history.messages or []
+        input_messages = history_messages + [HumanMessage(content=user)]
+        response = agent.invoke({"messages": input_messages})
 
-        # Fallback chat guidance (stay on mission)
-        cons.print(_bubble("assistant", "I'm focused on CyberPanel security. Say 'scan' to check the host, 'plan' for remediation, or 'read <path>' to inspect a file."))
+        # Extract assistant text from various possible return shapes
+        answer: str
+        if hasattr(response, "content"):
+            # AIMessage or similar
+            answer = getattr(response, "content") or ""
+        elif isinstance(response, dict):
+            answer = (
+                response.get("final")
+                or response.get("output")
+                or response.get("answer")
+                or ""
+            )
+            if not answer and isinstance(response.get("messages"), list) and response["messages"]:
+                last = response["messages"][-1]
+                answer = getattr(last, "content", str(last))
+        else:
+            answer = str(response)
+
+        # Persist turn to history
+        try:
+            chat_history.add_user_message(user)
+            chat_history.add_ai_message(answer)
+        except Exception:
+            pass
+
+        print("Agent: - chat.py:184", answer)

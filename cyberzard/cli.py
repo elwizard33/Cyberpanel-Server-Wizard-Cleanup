@@ -417,12 +417,11 @@ def chat(
     verify: bool = typer.Option(True, "--verify/--no-verify", help="Verify remediation suggestions during chat"),
     auto_approve: bool = typer.Option(False, "--auto-approve", help="Auto-approve safe, read-only probes without prompting"),
     max_probes: int = typer.Option(5, "--max-probes", help="Max number of probe operations during verification"),
+    session: str = typer.Option("default", "--session", help="Conversation session id for persisted history"),
 ) -> None:
-    """Interactive Rich-powered chat focused on CyberPanel anomaly hunting."""
-    # Use TTY check to avoid launching rich UI in non-interactive contexts
-    if not sys.stdout.isatty() or os.getenv("NO_COLOR") in {"1", "true", "TRUE"}:
-        typer.echo("Chat mode is best used in an interactive terminal (TTY).")
-    run_chat(verify=verify, auto_approve=auto_approve, max_probes=max_probes)
+    """Interactive AI-powered chat (LangChain agent mode)."""
+    typer.echo("Launching Cyberzard AI agent chat (LangChain mode)...")
+    run_chat(verify=verify, auto_approve=auto_approve, max_probes=max_probes, session_id=session)
 
 
 @app.command("n8n-setup")

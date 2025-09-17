@@ -73,7 +73,7 @@ Run `cyberzard --help` for full list.
 | `scan` | Run all scanners, list findings | `--json`, `--verify/--no-verify`, `--auto-approve`, `--max-probes` |
 | `advise` | Generate concise advice from scan | `--json`, `--include-encrypted` |
 | `agent` | Minimal ReAct loop over safe tools | `--steps N`, `--show-plan` |
-| `chat` | Interactive chat with permission-gated tools | `--verify/--no-verify`, `--auto-approve`, `--max-probes` |
+| `chat` | Interactive chat with permission-gated tools & SQLite history | `--verify/--no-verify`, `--auto-approve`, `--max-probes`, `--session` |
 | `show-prompt` | Print the agent system prompt | — |
 | `version` | Show version | — |
 | `upgrade` | Self-update from git checkout | — |
@@ -88,6 +88,7 @@ Flags:
 - `--verify/--no-verify` AI/heuristic verification of suggested actions (default: verify)
 - `--auto-approve` auto-consent to safe read-only probes
 - `--max-probes N` limit total probes during verification
+ - `--session ID` conversation session id for persisted history
 
 Examples:
 
@@ -95,6 +96,14 @@ Examples:
 cyberzard chat
 cyberzard chat --no-verify
 cyberzard chat --auto-approve --max-probes 8
+cyberzard chat --session ops
 ```
+
+In-chat commands:
+
+- `/history [n]` — show last n messages (default: 10)
+- `/clear` — clear current session history
+- `/sessions` — list available sessions
+- `/switch <id>` — switch active session
 
 

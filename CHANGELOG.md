@@ -55,3 +55,17 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - New "n8n Setup" page with quick start, options, and troubleshooting
 - Sidebar TOC updated to include n8n Setup
 - Introduction updated to reflect long-term goal: beyond security toward a general-purpose CyberPanel assistant
+
+## [1.0.1] - 2025-09-17
+### Added
+- LangChain tools agent powering `cyberzard chat` with safe tool calls (run, debug, and complete shell commands via constrained tools)
+- SQLite-backed conversation history with per-session isolation (`--session <id>`)
+- In-chat commands: `/history [n]`, `/clear`, `/sessions`, `/switch <id>`
+- TUI scaffolding command (`tui`) wiring ready for future UI (experimental)
+### Docs
+- Chat guide updated with session support and in-chat commands
+- Commands reference updated (`--session` flag, in-chat commands)
+- Introduction now includes a Chat quick start
+- Security and Configuration pages note local data storage in `cyberzard_agent.sqlite`
+### Developer
+- VS Code settings to align interpreter with Anaconda for consistent imports

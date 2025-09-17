@@ -24,3 +24,9 @@ Or per-invocation without changing your shell environment:
 cyberzard --provider anthropic advise
 ```
 
+## Data storage
+
+- Chat history is persisted to `cyberzard_agent.sqlite` in the project directory.
+- Use `cyberzard chat --session <id>` to segment conversations (each session has its own history).
+- Clear the current session during chat with `/clear`.
+

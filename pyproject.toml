@@ -1,6 +1,6 @@
 [project]
 name = "cyberzard"
-version = "0.1.5"
+version = "1.0.1"
 description = "AI-assisted CyberPanel server scanner and remediation CLI"
 authors = [ {name = "CyberPanel Wizard"} ]
 license = {text = "MIT"}
