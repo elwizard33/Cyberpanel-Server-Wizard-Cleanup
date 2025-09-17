@@ -107,3 +107,20 @@ In-chat commands:
 - `/switch <id>` — switch active session
 
 
+## Logs and Memory
+
+Cyberzard’s n8n setup and email troubleshooting flows now integrate with the AI agent for safer, permission‑gated execution and provide persistent logs + memory records:
+
+- n8n (`cyberzard n8n-setup`)
+	- Flags: `--interactive/--no-interactive`, `--auto-approve`, `--json-out`
+	- Execution logs: placed next to the applied script (e.g., `n8n_setup_native.sh.log`)
+	- Memory: recorded under chat session `n8n` with applied/aborted status, mode, and paths
+
+- Email (`email-security`, `email-fix`)
+	- Flags: `--log-dir <path>` (JSON log per run), plus existing `--run`, `--dry-run/--no-dry-run`, `--max-risk`, `--auto-approve`, `--ai-refine/--no-ai-refine`
+	- Logs: a JSON file saved in the chosen directory (e.g., `./logs/email_exec_1694971234.json`)
+	- Memory: recorded under chat session `email-troubleshooting` with summary counters and `log_path`
+
+In chat, you can list sessions with `/sessions`, switch with `/switch n8n` or `/switch email-troubleshooting`, and view history with `/history`.
+
+

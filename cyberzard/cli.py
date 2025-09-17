@@ -23,18 +23,7 @@ from .evidence import write_scan_snapshot  # will no-op if not implemented
 from .ui import render_scan_output, render_advice_output
 from .agent_engine.verify import verify_plan
 from .chat import run_chat
-from .n8n_setup import (
-    collect_preferences,
-    validate_environment,
-    generate_native_script,
-    generate_tunnel_script,
-    generate_update_script_native,
-    generate_update_script_tunnel,
-    write_script,
-    sanitize_prefs_for_json,
-    apply_native,
-    apply_tunnel,
-)
+from .n8n_setup import run_n8n_setup
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
 
@@ -304,6 +293,7 @@ def email_security(
     dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Simulate actions without executing commands"),
     run: bool = typer.Option(False, "--run", help="Execute actions after scan (guided)"),
     ai_refine: bool = typer.Option(True, "--ai-refine/--no-ai-refine", help="Attempt AI refinement on failures"),
+    log_dir: Optional[str] = typer.Option(None, "--log-dir", help="Directory to write persistent JSON logs for this run"),
 ) -> None:
     """Scan CyberPanel email stack and optionally run guided hardening."""
     typer.echo("📧 Scanning email stack...")
@@ -313,6 +303,16 @@ def email_security(
     summary_txt = summarize_email_security(scan, plan) if provider_enabled else None
     if run:
         actions = plan.get("plan", {}).get("actions", [])
+        # Permission gating for email actions (interactive preview)
+        if not auto_approve and sys.stdout.isatty():
+            preview = [
+                f"Total actions: {len(actions)}",
+                f"Max risk allowed: {max_risk}",
+            ]
+            typer.echo("About to execute guided email actions:\n" + "\n".join(preview))
+            approved = typer.confirm("Proceed with execution?", default=False)
+            if not approved:
+                actions = []
         exec_result = run_guided(
             actions,
             interactive=sys.stdout.isatty(),
@@ -324,6 +324,7 @@ def email_security(
             provider_enabled=provider_enabled,
             fail_fast=False,
             timeout=90,
+            log_dir=log_dir,
         )
     else:
         exec_result = None
@@ -351,6 +352,8 @@ def email_security(
     if exec_result:
         typer.echo("\nExecution Summary:")
         typer.echo(json.dumps(exec_result.get("summary", {}), indent=2))
+        if exec_result.get("log_path"):
+            typer.echo(f"Log: {exec_result['log_path']}")
 
 
 @app.command("email-fix")
@@ -362,6 +365,7 @@ def email_fix(
     dry_run: bool = typer.Option(True, "--dry-run/--no-dry-run", help="Simulate actions without executing commands"),
     run: bool = typer.Option(True, "--run/--no-run", help="Execute actions (guided)"),
     ai_refine: bool = typer.Option(True, "--ai-refine/--no-ai-refine", help="Attempt AI refinement on failures"),
+    log_dir: Optional[str] = typer.Option(None, "--log-dir", help="Directory to write persistent JSON logs for this run"),
 ) -> None:
     """Generate full email remediation guide and optionally run guided execution."""
     typer.echo("🛠 Generating email fix guide...")
@@ -383,6 +387,7 @@ def email_fix(
             provider_enabled=provider_enabled,
             fail_fast=False,
             timeout=90,
+            log_dir=log_dir,
         )
     if json_out:
         payload = {"scan": scan, "plan": plan, "guide": guide}
@@ -410,6 +415,8 @@ def email_fix(
     if exec_result:
         typer.echo("\nExecution Summary:")
         typer.echo(json.dumps(exec_result.get("summary", {}), indent=2))
+        if exec_result.get("log_path"):
+            typer.echo(f"Log: {exec_result['log_path']}")
 
 
 @app.command()
@@ -438,63 +445,43 @@ def n8n_setup(
     write_only: bool = typer.Option(False, "--write-only", help="Only write scripts; do not execute"),
     out_dir: Optional[str] = typer.Option(None, "--out-dir", help="Directory to write scripts to"),
     overwrite: bool = typer.Option(False, "--overwrite", help="Overwrite existing files when writing"),
+    interactive: bool = typer.Option(False, "--interactive/--no-interactive", help="Prompt before applying"),
+    auto_approve: bool = typer.Option(False, "--auto-approve", help="Apply without prompting (non-interactive)"),
+    json_out: bool = typer.Option(False, "--json", help="Print JSON summary to stdout"),
 ) -> None:
-    """Guide-and-generate scripts to deploy n8n on CyberPanel, optionally applying them."""
-    # Aggregate preferences
-    provided = {
-        "domain": domain,
-        "subdomain": subdomain,
-        "mode": mode.lower().strip(),
-        "port": port,
-        "basic_auth": basic_auth,
-        "basic_auth_user": basic_auth_user,
-        "timezone": timezone,
-        "n8n_image": n8n_image,
-        "postgres_image": postgres_image,
-    }
-    prefs, warns, errs = collect_preferences(interactive=False, provided=provided)
-    w2, e2 = validate_environment(prefs)
-    warns += w2
-    errs += e2
-    if errs:
-        typer.echo("Errors:\n" + "\n".join(f" - {e}" for e in errs))
-        raise typer.Exit(code=2)
-    if warns:
-        typer.echo("Warnings:\n" + "\n".join(f" - {w}" for w in warns))
+    """Guide-and-generate scripts to deploy n8n on CyberPanel, optionally applying them.
 
-    # Generate scripts
-    mode_val = prefs["mode"] or "native"
-    if mode_val not in {"native", "tunnel"}:
-        typer.echo("Invalid mode; expected native or tunnel")
-        raise typer.Exit(code=2)
-    setup_script = generate_native_script(prefs) if mode_val == "native" else generate_tunnel_script(prefs)
-    update_script = generate_update_script_native(prefs) if mode_val == "native" else generate_update_script_tunnel(prefs)
-
-    # Write scripts
-    paths = []
-    if out_dir:
-        os.makedirs(out_dir, exist_ok=True)
-        setup_path = os.path.join(out_dir, f"n8n_setup_{mode_val}.sh")
-        update_path = os.path.join(out_dir, f"n8n_update_{mode_val}.sh")
-        paths.append(write_script(setup_path, setup_script, overwrite=overwrite))
-        paths.append(write_script(update_path, update_script, overwrite=overwrite))
-        typer.echo("Wrote scripts:\n" + "\n".join(f" - {p}" for p in paths))
-
-    if write_only:
-        payload = {"prefs": sanitize_prefs_for_json(prefs), "scripts": paths or ["<temp>"]}
-        typer.echo(json.dumps(payload, indent=2))
-        return
-
-    # Apply
-    if mode_val == "native":
-        ok, path = apply_native(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
-    else:
-        ok, path = apply_tunnel(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
-    if ok:
-        typer.echo(f"✅ Applied {mode_val} setup (script at: {path})")
-        return
-    typer.echo(f"❌ Apply failed: {path}")
-    raise typer.Exit(code=1)
+    This command delegates to run_n8n_setup for orchestration, which handles prompting,
+    agent-mediated execution, logging, and memory recording.
+    """
+    result = run_n8n_setup(
+        domain=domain,
+        subdomain=subdomain,
+        mode=mode.lower().strip(),
+        port=port,
+        basic_auth=basic_auth,
+        basic_auth_user=basic_auth_user,
+        timezone=timezone,
+        n8n_image=n8n_image,
+        postgres_image=postgres_image,
+        write_only=write_only,
+        out_dir=out_dir,
+        overwrite=overwrite,
+        interactive=interactive,
+        auto_approve=auto_approve,
+        json_out=json_out,
+    )
+    # Human-friendly echo when TTY and not JSON
+    if not json_out:
+        if result.get("ok") and result.get("applied"):
+            typer.echo(f"✅ Applied {result.get('mode')} setup (script at: {result.get('apply_script')})")
+            if result.get("apply_log"):
+                typer.echo(f"   Log: {result.get('apply_log')}")
+        elif result.get("aborted"):
+            typer.echo("ℹ️  Apply aborted (not approved)")
+        else:
+            typer.echo("❌ Apply failed")
+            raise typer.Exit(code=1)
 
 
 def main() -> None:  # pragma: no cover

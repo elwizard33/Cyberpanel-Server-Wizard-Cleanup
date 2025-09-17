@@ -54,6 +54,13 @@ The command prints a summary and, when `--out-dir` is provided, writes scripts l
 
 You can inspect and version these scripts before running them.
 
+### Agent-mediated execution, permission gating, and logs
+
+- When applying, Cyberzard asks for confirmation in interactive mode (or proceed automatically with `--auto-approve`).
+- Scripts are executed through the AI agent's shell tool when available (with a safe fallback to direct execution).
+- An execution log is written next to the script (e.g., `n8n_setup_native.sh.log`) capturing combined output and exit codes.
+- A memory entry is recorded in the chat history DB under the session `n8n` summarizing the run (applied/aborted, mode, paths).
+
 ## Options reference
 
 - `--domain TEXT` (required): Root domain, e.g. `example.com`
@@ -67,6 +74,8 @@ You can inspect and version these scripts before running them.
 - `--resource-cpus TEXT`, `--resource-memory TEXT` (Docker limits)
 - `--write-only` and `--out-dir PATH` to generate scripts without applying
 - `--overwrite` to allow overwriting existing files in `--out-dir`
+- `--interactive/--no-interactive` to require an approval prompt before applying (interactive mode)
+- `--auto-approve` to apply without prompting in non-interactive environments
 - `--json-out` to print a machine-readable summary
 
 ## Notes and safety

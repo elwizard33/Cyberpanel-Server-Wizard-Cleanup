@@ -14,6 +14,8 @@ Cyberzard provides two focused commands for the CyberPanel email subsystem:
 
 AI is optional. Without AI keys configured output falls back to deterministic static summaries/guides.
 
+Cyberzard now powers the execution path via the AI agent's shell tool (when enabled), with a safe fallback to direct execution. Interactive permission gating previews the plan before actions are run.
+
 ## What Is Collected
 
 The scanner is read‑only:
@@ -41,6 +43,7 @@ No modifications are made during scanning.
 | `--max-risk {low|medium|high}` | both | Skip actions above threshold (default: high) |
 | `--auto-approve` | both | Skip interactive confirmations (non-TTY safe) |
 | `--ai-refine/--no-ai-refine` | both | Attempt single AI correction for failed commands (default on) |
+| `--log-dir <path>` | both | Write a persistent JSON log of the guided run to the given directory |
 
 ## email-security
 
@@ -93,7 +96,7 @@ cyberzard email-fix --dry-run --no-run
 cyberzard email-fix --run --dry-run --max-risk low
 
 # Real execution (review first!)
-cyberzard email-fix --run --no-dry-run --max-risk medium --auto-approve
+cyberzard email-fix --run --no-dry-run --max-risk medium --auto-approve --log-dir ./logs
 ```
 
 Abridged JSON:
@@ -113,6 +116,8 @@ Each action passes through safety validation:
 - Rejects dangerous paths (`/etc/shadow`, `/etc/passwd`), pipeline downloads (`curl |`), excessive heredocs
 - Dry-run marks success without execution
 - AI refinement (if enabled) proposes a single-line replacement executed only if also safe
+
+Execution output and return codes are captured to a JSON log when `--log-dir` is provided. The CLI will display the log path, and the run will be recorded into the chat history DB (session `email-troubleshooting`).
 
 ## AI Integration
 

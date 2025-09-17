@@ -87,22 +87,54 @@ def is_command_safe(cmd: str) -> Tuple[bool, str]:
 # ---------------- Execution -----------------
 
 def _run_shell(cmd: str, timeout: int) -> Tuple[int, str, str]:
+    """Run shell with preference for the chat agent's shell tool.
+
+    Returns (rc, stdout, stderr). When executed via the agent tool, stdout will contain
+    combined output and stderr will be empty (tool merges streams).
+    """
+    # Try via agent tool first (best-effort)
     try:
-        cp = subprocess.run(cmd, shell=True, text=True, capture_output=True, timeout=timeout)
-        return cp.returncode, cp.stdout, cp.stderr
-    except subprocess.TimeoutExpired:
-        return 124, "", "timeout"
-    except Exception as e:  # pragma: no cover - defensive
-        return 125, "", str(e)
+        from .chat import run_shell_command as _agent_shell_tool  # type: ignore
+        # Use bash -lc to allow env/aliases; capture rc marker
+        quoted = shlex.quote(cmd)
+        combined = f"(/bin/bash -lc {quoted}) 2>&1; rc=$?; echo __CZ_RC__:$rc"
+        output: str = ""
+        try:
+            out_obj = _agent_shell_tool.invoke({"command": combined})  # type: ignore[attr-defined]
+            output = str(out_obj)
+        except Exception:
+            try:
+                output = str(_agent_shell_tool.run(combined))  # type: ignore[attr-defined]
+            except Exception:
+                output = str(_agent_shell_tool(combined))
+        rc_marker = "__CZ_RC__:"
+        rc_val: Optional[int] = None
+        for line in reversed(output.splitlines()):
+            if rc_marker in line:
+                try:
+                    rc_val = int(line.split(rc_marker, 1)[1].strip())
+                except Exception:
+                    rc_val = None
+                break
+        return (rc_val if rc_val is not None else 1), output, ""
+    except Exception:
+        # Fallback to direct subprocess
+        try:
+            cp = subprocess.run(cmd, shell=True, text=True, capture_output=True, timeout=timeout)
+            return cp.returncode, cp.stdout, cp.stderr
+        except subprocess.TimeoutExpired:
+            return 124, "", "timeout"
+        except Exception as e:  # pragma: no cover - defensive
+            return 125, "", str(e)
 
 # ---------------- Main guided flow -----------------
 
 def execute_action(action: Dict[str, Any], timeout: int = 30, dry_run: bool = False) -> EmailActionExecutionResult:
     result = EmailActionExecutionResult(
-        type=action.get("type"),
-        category=action.get("category"),
-        risk=action.get("risk"),
-        reason=action.get("reason"),
+        type=str(action.get("type", "")),
+        category=str(action.get("category", "")),
+        risk=str(action.get("risk", "low")),
+        reason=str(action.get("reason", "")),
         command_preview=action.get("command_preview", ""),
         dry_run=dry_run,
     )
@@ -170,10 +202,10 @@ def run_guided(
         risk = action.get("risk", "low")
         if RISK_ORDER.get(risk, 0) > max_rank:
             r = EmailActionExecutionResult(
-                type=action.get("type"),
-                category=action.get("category"),
-                risk=risk,
-                reason=action.get("reason"),
+                type=str(action.get("type", "")),
+                category=str(action.get("category", "")),
+                risk=str(risk),
+                reason=str(action.get("reason", "")),
                 command_preview=action.get("command_preview", ""),
                 skipped=True,
                 skip_reason=f"risk {risk} exceeds max_risk {max_risk}",
@@ -182,10 +214,10 @@ def run_guided(
             continue
         if not auto_approve and interactive is False:
             r = EmailActionExecutionResult(
-                type=action.get("type"),
-                category=action.get("category"),
-                risk=risk,
-                reason=action.get("reason"),
+                type=str(action.get("type", "")),
+                category=str(action.get("category", "")),
+                risk=str(risk),
+                reason=str(action.get("reason", "")),
                 command_preview=action.get("command_preview", ""),
                 skipped=True,
                 skip_reason="not approved (interactive disabled)",
@@ -242,11 +274,13 @@ def run_guided(
             break
 
     # Logging
+    log_path_str: Optional[str] = None
     if log_dir:
         try:
             log_path = pathlib.Path(log_dir) / f"email_exec_{int(time.time())}.json"
             data = [r.to_dict() for r in executions]
             log_path.write_text(json.dumps(data, indent=2), encoding="utf-8")
+            log_path_str = str(log_path)
         except Exception:  # pragma: no cover
             pass
 
@@ -260,7 +294,15 @@ def run_guided(
         "refined_success": sum(1 for r in executions if r.refinement_success),
     }
 
-    return {"executions": [r.to_dict() for r in executions], "summary": summary}
+    result = {"executions": [r.to_dict() for r in executions], "summary": summary}
+    if log_path_str:
+        result["log_path"] = log_path_str
+    # Record memory entry (best-effort)
+    try:
+        _record_email_memory(result)
+    except Exception:
+        pass
+    return result
 
 __all__ = [
     "run_guided",
@@ -268,3 +310,28 @@ __all__ = [
     "is_command_safe",
     "EmailActionExecutionResult",
 ]
+
+# ---------------- Memory recording (best-effort) -----------------
+
+def _record_email_memory(result: Dict[str, Any]) -> None:
+    """Record a summary of an email troubleshooting run in the chat DB session 'email-troubleshooting'."""
+    try:
+        from langchain_community.chat_message_histories import SQLChatMessageHistory  # type: ignore
+        db_path = "cyberzard_agent.sqlite"
+        hist = SQLChatMessageHistory(session_id="email-troubleshooting", connection_string=f"sqlite:///{db_path}")
+        summary = result.get("summary", {}) if isinstance(result, dict) else {}
+        # Keep brief, include key counters
+        user_msg = "[email-troubleshooting] guided run"
+        ai_msg = json.dumps({
+            "executed": summary.get("executed"),
+            "success": summary.get("success"),
+            "failures": summary.get("failures"),
+            "refined_success": summary.get("refined_success"),
+            "skipped": summary.get("skipped"),
+            "unsafe": summary.get("unsafe"),
+            "log_path": result.get("log_path"),
+        }, indent=2)
+        hist.add_user_message(user_msg)
+        hist.add_ai_message(ai_msg)
+    except Exception:
+        pass

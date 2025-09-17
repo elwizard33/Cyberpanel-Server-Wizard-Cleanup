@@ -69,3 +69,21 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 - Security and Configuration pages note local data storage in `cyberzard_agent.sqlite`
 ### Developer
 - VS Code settings to align interpreter with Anaconda for consistent imports
+
+## [0.1.7] - 2025-09-17
+### Added
+- Agent-mediated execution for n8n setup and email troubleshooting flows, with safe fallback to subprocess
+- Permission gating for n8n apply and email actions (interactive preview + `--auto-approve` for headless)
+- Persistent logs
+	- n8n: script-side `.log` capturing method, script, combined output, and explicit exit code marker
+	- email: `--log-dir` flag writes structured JSON execution logs per run
+- Memory recording
+	- n8n: chat history session `n8n` records applied/aborted state, mode, and paths
+	- email: chat history session `email-troubleshooting` records summary counters and log path
+### CLI
+- n8n: `--interactive/--no-interactive`, `--auto-approve`, `--json-out`
+- email: `--log-dir` added to `email-security` / `email-fix`
+### Docs
+- n8n Setup page updated with agent execution, permission gating, and logs
+- Email Security page updated with agent execution note, `--log-dir`, and memory info
+- Commands page gained a new "Logs and Memory" section covering both flows

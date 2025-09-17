@@ -76,6 +76,7 @@ def run_n8n_setup(**kwargs: Any) -> Dict[str, Any]:
     write_only = bool(kwargs.get("write_only", False))
     out_dir = kwargs.get("out_dir")
     overwrite = bool(kwargs.get("overwrite", False))
+    auto_approve = bool(kwargs.get("auto_approve", False))
     json_out = bool(kwargs.get("json_out", False))
     paths: List[str] = []
     if out_dir:
@@ -90,17 +91,43 @@ def run_n8n_setup(**kwargs: Any) -> Dict[str, Any]:
     ok = True
     applied = False
     apply_path = None
+    aborted = False
     if not write_only:
-        if mode_val == "native":
-            ok, apply_path = apply_native(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
-        else:
-            ok, apply_path = apply_tunnel(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
-        applied = ok
-        if cons:
-            if ok:
-                cons.print(f"[bold green]Applied {mode_val} setup[/bold green]: {apply_path}")
+        # Permission gating: require explicit approval unless auto_approve is set
+        approved = False
+        if auto_approve:
+            approved = True
+        elif interactive:
+            # Show a short preview to the user
+            preview_lines = (setup_script or "").splitlines()[:30]
+            if cons:
+                cons.print("[bold]About to apply n8n setup using the AI agent runner.[/bold]")
+                cons.print("[dim]Preview of script (first 30 lines):[/dim]\n" + "\n".join(preview_lines))
             else:
-                cons.print(f"[red]Apply failed[/red]: {apply_path}")
+                print("About to apply n8n setup using the AI agent runner.")
+                print("Preview (first 30 lines):\n" + "\n".join(preview_lines))
+            try:
+                answer = input("Proceed? [y/N]: ").strip().lower()
+                approved = answer in {"y", "yes"}
+            except Exception:
+                approved = False
+        else:
+            # Non-interactive and not auto-approved -> skip applying
+            approved = False
+
+        if not approved:
+            aborted = True
+        else:
+            if mode_val == "native":
+                ok, apply_path = apply_native(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
+            else:
+                ok, apply_path = apply_tunnel(prefs, save_to=(paths[0] if paths else None), overwrite=overwrite)
+            applied = ok
+            if cons:
+                if ok:
+                    cons.print(f"[bold green]Applied {mode_val} setup[/bold green]: {apply_path}")
+                else:
+                    cons.print(f"[red]Apply failed[/red]: {apply_path}")
 
     summary = {
         "ok": bool(ok),
@@ -109,8 +136,15 @@ def run_n8n_setup(**kwargs: Any) -> Dict[str, Any]:
         "prefs": sanitize_prefs_for_json(prefs),
         "scripts": paths,
         "apply_script": apply_path,
+        "apply_log": (apply_path + ".log") if apply_path else None,
         "warnings": warns,
+        "aborted": aborted,
     }
+    # Record memory entry for this n8n interaction (best-effort)
+    try:
+        _record_n8n_memory(summary)
+    except Exception:
+        pass
     if json_out and not cons:
         print(json.dumps(summary))
     return summary
@@ -523,7 +557,10 @@ __all__.extend(["write_script", "sanitize_prefs_for_json"])
 # -------------------------------
 
 def _write_and_run_script(content: str) -> Tuple[bool, str]:
-    """Write content to a temp file and execute with bash. Returns (ok, path)."""
+    """Write content to a temp file and execute with bash via the AI agent tool when available.
+
+    Returns (ok, path_to_script). Falls back to direct subprocess if the agent tool isn't available.
+    """
     try:
         with tempfile.NamedTemporaryFile("w", delete=False, prefix="cz-n8n-", suffix=".sh", encoding="utf-8") as tf:
             tf.write(content)
@@ -532,8 +569,60 @@ def _write_and_run_script(content: str) -> Tuple[bool, str]:
             os.chmod(tmp_path, 0o750)
         except Exception:
             pass
-        proc = subprocess.run(["/bin/bash", tmp_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
-        ok = proc.returncode == 0
+
+        # Prefer executing via the chat agent's shell tool
+        rc: Optional[int] = None
+        exec_method = "agent-tool"
+        captured_output: str = ""
+        try:
+            from .chat import run_shell_command as _agent_shell_tool  # type: ignore
+            # Build a command that always returns 0 so we can capture the script's rc explicitly
+            combined = f"(/bin/bash {tmp_path}) 2>&1; rc=$?; echo __CZ_RC__:$rc"
+            try:
+                # Newer LangChain BaseTool exposes invoke(dict)
+                out_obj = _agent_shell_tool.invoke({"command": combined})  # type: ignore[attr-defined]
+                captured_output = str(out_obj)
+            except Exception:
+                try:
+                    # Some variants support run(str)
+                    captured_output = str(_agent_shell_tool.run(combined))  # type: ignore[attr-defined]
+                except Exception:
+                    # Fallback to treating it as a plain callable
+                    captured_output = str(_agent_shell_tool(combined))
+
+            # Parse return code marker
+            rc_marker = "__CZ_RC__:"
+            rc_val: Optional[int] = None
+            for line in reversed(captured_output.splitlines()):
+                if rc_marker in line:
+                    try:
+                        rc_val = int(line.split(rc_marker, 1)[1].strip())
+                    except Exception:
+                        rc_val = None
+                    break
+            rc = rc_val if rc_val is not None else 1
+        except Exception:
+            # Agent not available -> run directly
+            exec_method = "subprocess"
+            try:
+                proc = subprocess.run(["/bin/bash", tmp_path], stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+                rc = proc.returncode
+                captured_output = (proc.stdout or "") + ("\n[STDERR]\n" + proc.stderr if proc.stderr else "")
+            except Exception:
+                rc = None
+
+        # Write execution log next to the script
+        try:
+            log_path = tmp_path + ".log"
+            with open(log_path, "w", encoding="utf-8") as lf:
+                lf.write("# cyberzard n8n-setup execution log\n")
+                lf.write(f"# method: {exec_method}\n")
+                lf.write(f"# script: {tmp_path}\n\n")
+                lf.write(captured_output)
+        except Exception:
+            pass
+
+        ok = (rc == 0)
         return ok, tmp_path
     except Exception:
         return False, ""
@@ -549,7 +638,14 @@ def apply_native(prefs: Dict[str, Any], *, save_to: Optional[str] = None, overwr
             path = write_script(save_to, script, overwrite=overwrite)
         except Exception as e:
             return False, f"write failed: {e}"
-        ok, _ = _write_and_run_script(script)
+        ok, tmp_path = _write_and_run_script(script)
+        # Move tmp log next to saved script if present
+        try:
+            tmp_log = tmp_path + ".log"
+            if os.path.exists(tmp_log):
+                shutil.move(tmp_log, path + ".log")
+        except Exception:
+            pass
         return ok, path
     ok, path = _write_and_run_script(script)
     return ok, path
@@ -566,10 +662,45 @@ def apply_tunnel(prefs: Dict[str, Any], *, save_to: Optional[str] = None, overwr
             path = write_script(save_to, script, overwrite=overwrite)
         except Exception as e:
             return False, f"write failed: {e}"
-        ok, _ = _write_and_run_script(script)
+        ok, tmp_path = _write_and_run_script(script)
+        # Move tmp log next to saved script if present
+        try:
+            tmp_log = tmp_path + ".log"
+            if os.path.exists(tmp_log):
+                shutil.move(tmp_log, path + ".log")
+        except Exception:
+            pass
         return ok, path
     ok, path = _write_and_run_script(script)
     return ok, path
 
 
 __all__.extend(["apply_native", "apply_tunnel"])
+
+
+# -------------------------------
+# Memory recording (best-effort)
+# -------------------------------
+
+def _record_n8n_memory(event: Dict[str, Any]) -> None:
+    """Record an 'n8n' tagged interaction in the chat history DB (best-effort)."""
+    try:
+        from langchain_community.chat_message_histories import SQLChatMessageHistory  # type: ignore
+        db_path = "cyberzard_agent.sqlite"
+        hist = SQLChatMessageHistory(session_id="n8n", connection_string=f"sqlite:///{db_path}")
+        # Keep messages short; include key facts and paths
+        user_msg = "[n8n] setup run"
+        ai_msg = json.dumps({
+            "ok": event.get("ok"),
+            "applied": event.get("applied"),
+            "mode": event.get("mode"),
+            "apply_script": event.get("apply_script"),
+            "apply_log": event.get("apply_log"),
+            "aborted": event.get("aborted"),
+            "scripts": event.get("scripts", []),
+        }, indent=2)
+        hist.add_user_message(user_msg)
+        hist.add_ai_message(ai_msg[:3500])  # limit size
+    except Exception:
+        # Never fail the main flow due to memory logging
+        pass
