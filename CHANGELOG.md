@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.13] - 2024-09-18
+### Fixed
+- ChatOpenAI model initialization is now lazy to avoid requiring API key at import time
+- Prevents OpenAIError during binary smoke test when OPENAI_API_KEY is not set
+- Chat functionality only initializes LangChain components when actually used
+
 ## [0.1.12] - 2024-09-18
 ### Fixed
 - PyInstaller binary build now includes complete LangChain dependency chain

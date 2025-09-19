@@ -71,20 +71,31 @@ def _list_sessions() -> list[str]:
     except Exception:
         return []
 
-model = ChatOpenAI(temperature=0)
-system_prompt = "You are a helpful CLI agent that can run, debug, and complete shell commands. Use tools to assist the user."
+# Lazy initialization - only create when needed
+_model = None
+_agent = None
 
-# Build a proper chat prompt template for the tools agent
-prompt = ChatPromptTemplate.from_messages([
-    ("system", system_prompt),
-    MessagesPlaceholder("messages"),
-])
+def get_model():
+    global _model
+    if _model is None:
+        _model = ChatOpenAI(temperature=0)
+    return _model
 
-agent = create_agent(
-    model,
-    [run_shell_command, debug_shell_command, complete_shell_command],
-    prompt,
-)
+def get_agent():
+    global _agent
+    if _agent is None:
+        model = get_model()
+        system_prompt = "You are a helpful CLI agent that can run, debug, and complete shell commands. Use tools to assist the user."
+        
+        # Build a proper chat prompt template for the tools agent
+        prompt = ChatPromptTemplate.from_messages([
+            ("system", system_prompt),
+            MessagesPlaceholder("messages"),
+            MessagesPlaceholder("agent_scratchpad"),
+        ])
+        
+        _agent = create_agent(model, tools=[run_shell_command, debug_shell_command, complete_shell_command], prompt=prompt)
+    return _agent
 
 def run_chat(verify: bool = True, auto_approve: bool = False, max_probes: int = 5, session_id: str = "default") -> None:
     print(f"Cyberzard AI Chat (LangChain agent) [session: {session_id}]. Type 'quit' to exit. Commands: /clear, /history [n], /sessions, /switch <id> - chat.py:90")
@@ -154,6 +165,7 @@ def run_chat(verify: bool = True, auto_approve: bool = False, max_probes: int = 
         # Load history (list[BaseMessage]) and append the current user message
         history_messages: list[BaseMessage] = chat_history.messages or []
         input_messages = history_messages + [HumanMessage(content=user)]
+        agent = get_agent()
         response = agent.invoke({"messages": input_messages})
 
         # Extract assistant text from various possible return shapes
