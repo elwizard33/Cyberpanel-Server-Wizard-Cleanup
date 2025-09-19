@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-20.04  # Use older Ubuntu for better GLIBC compatibility
+          - os: ubuntu-22.04  # Use stable Ubuntu with compatibility flags
             label: linux-x86_64
             arch: x86_64
     steps:
@@ -43,6 +43,7 @@ jobs:
               app()
           EOF
           pyinstaller --onefile --name "cyberzard-linux-x86_64" \
+            --strip \
             --hidden-import=textual \
             --hidden-import=textual.app \
             --hidden-import=textual.widgets \
@@ -78,7 +79,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-20.04  # Use same Ubuntu version for consistency
+    runs-on: ubuntu-22.04  # Use stable Ubuntu
     steps:
       - uses: actions/checkout@v4
         with:

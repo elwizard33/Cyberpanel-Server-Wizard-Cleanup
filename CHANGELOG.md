@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.15] - 2024-09-18
+### Fixed
+- Switch back to ubuntu-22.04 with --strip flag for better runner availability
+- Use PyInstaller --strip flag to create more portable binaries
+- Resolves GitHub Actions runner availability issues with ubuntu-20.04
+
 ## [0.1.14] - 2024-09-18
 ### Fixed
 - Use Ubuntu 20.04 for binary builds to improve GLIBC compatibility
