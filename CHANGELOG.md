@@ -4,6 +4,20 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.9] - 2024-09-18
+### Added
+- Optional Textual TUI via `cyberzard tui` command
+- Global `--upgrade` flag now works with frozen binaries using built-in updater
+- Lazy import for TUI to keep Textual as optional dependency
+
+### Fixed
+- Global `--upgrade` flag now prefers built-in updater for frozen binaries, falls back to git+pip for dev installs
+- TUI compatibility with current Textual API (6.1.0+)
+
+### Changed
+- Updated documentation to clarify Linux-only binary releases
+- Enhanced installation docs with both `--upgrade` flag and explicit `upgrade` command
+
 ## [0.1.0] - 2025-09-07
 ### Added
 - Core scanner suite (files, processes, services, cron, users, SSH keys, encrypted files, composite correlation)
@@ -85,4 +99,16 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ### Fixed
 - GitHub Actions workflow no longer references secrets in job-level conditions; step now skips cleanly if signing secrets are absent.
+
+
+## v0.1.9 - 2025-09-18
+### Added
+- Minimal Textual TUI (`cyberzard tui`) to visualize scan summary, findings table, and plan preview. Optional dependency: `textual>=0.60`.
+
+### Changed
+- README updated to reflect Linux-only installer, upgrade instructions, and optional TUI usage.
+- Global `--upgrade` flag now prefers the built-in updater when running a frozen/binary build, falling back to git+pip self-update for source checkouts.
+
+### Notes
+- macOS users should install from source for now (see README). Binary releases remain Linux-only.
 

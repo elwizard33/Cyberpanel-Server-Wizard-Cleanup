@@ -111,6 +111,23 @@ def _root(
             raise typer.Exit(code=2)
         os.environ["CYBERZARD_MODEL_PROVIDER"] = val
     if upgrade:
+        # Prefer built-in updater for frozen binaries, else git self-update
+        if _updater.is_frozen():
+            try:
+                res = _updater.upgrade(channel="stable", dry_run=False)
+                status = res.get("status")
+                if status == "ok":
+                    typer.echo(f"✅ Upgraded binary to {res.get('version', 'latest')}")
+                    raise typer.Exit(code=0)
+                elif status == "unsupported":
+                    pass  # fall through to git path
+                else:
+                    reason = res.get("reason", "unknown_error")
+                    typer.echo(f"Update failed: {reason}")
+                    raise typer.Exit(code=1)
+            except Exception as e:  # pragma: no cover
+                typer.echo(f"Update failed: {e}")
+                raise typer.Exit(code=1)
         ok, msg = _self_update()
         if ok:
             typer.echo(f"✅ {msg}")
@@ -395,6 +412,20 @@ def email_security(
         typer.echo(json.dumps(exec_result.get("summary", {}), indent=2))
         if exec_result.get("log_path"):
             typer.echo(f"Log: {exec_result['log_path']}")
+
+
+    @app.command()
+    def tui() -> None:
+        """Launch the Textual TUI (optional dependency)."""
+        try:
+            # Lazy import to avoid hard dependency when not installed
+            from .tui import run_tui  # type: ignore
+        except Exception as e:
+            typer.echo("Textual TUI not installed. Install optional dependency first:")
+            typer.echo("  pip install 'textual>=0.60'")
+            typer.echo(f"Detail: {e}")
+            raise typer.Exit(code=1)
+        run_tui()
 
 
 @app.command("email-fix")

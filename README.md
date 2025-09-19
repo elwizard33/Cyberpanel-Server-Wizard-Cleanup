@@ -64,11 +64,12 @@ Modern incident triage for CyberPanel:
 | ReAct loop | Safe tool schema, sandboxed helpers |
 | Output | Pretty tables + JSON |
 | Chat mode | Interactive, permission‑aware assistant | Focused on CyberPanel |
+| TUI (optional) | Simple terminal UI for scan results | `cyberzard tui` (requires textual) |
 | Email stack hardening | scan + AI summary + guided execution | `email-security`, `email-fix` |
 
 ### Install & Use
 
-Fast install (macOS/Linux, user‑local, no sudo required):
+Fast install (Linux, user‑local, no sudo required):
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
@@ -85,7 +86,8 @@ CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.c
 Upgrade later:
 
 ```bash
-cyberzard upgrade --channel stable     # for installer/binary installs (self-updates)
+cyberzard --upgrade                    # quick upgrade using global flag
+cyberzard upgrade --channel stable     # explicit upgrade command
 ```
 
 Manual install (from source, editable):
@@ -99,8 +101,15 @@ pip install -e .[openai]   # or .[anthropic] or just .
 ```
 
 Notes:
-- We publish macOS and Linux binaries on GitHub Releases. See: https://github.com/elwizard33/Cyberzard/releases
+- **Linux-only binary releases**: We publish Linux x86_64/arm64 binaries on GitHub Releases. macOS/Windows users: install from source (below). See: https://github.com/elwizard33/Cyberzard/releases
 - No PyPI publishing yet. Use the installer or source install above. PyPI releases may be added later.
+
+Optional TUI (terminal UI):
+
+```bash
+pip install 'textual>=0.60'
+cyberzard tui
+```
 
 Common commands:
 
