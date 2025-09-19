@@ -68,7 +68,7 @@ Modern incident triage for CyberPanel:
 
 ### Install & Use
 
-Fast install (Linux, user‑local, no sudo):
+Fast install (macOS/Linux, user‑local, no sudo required):
 
 ```bash
 bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
@@ -82,6 +82,12 @@ CYBERZARD_EXTRAS=openai bash -c "$(curl -fsSL https://raw.githubusercontent.com/
 CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"
 ```
 
+Upgrade later:
+
+```bash
+cyberzard upgrade --channel stable     # for installer/binary installs (self-updates)
+```
+
 Manual install (from source, editable):
 
 ```bash
@@ -92,7 +98,9 @@ python -m pip install -U pip setuptools wheel
 pip install -e .[openai]   # or .[anthropic] or just .
 ```
 
-Note: No PyPI publishing yet. Use the installer or source install above. PyPI releases may be added later.
+Notes:
+- We publish macOS and Linux binaries on GitHub Releases. See: https://github.com/elwizard33/Cyberzard/releases
+- No PyPI publishing yet. Use the installer or source install above. PyPI releases may be added later.
 
 Common commands:
 

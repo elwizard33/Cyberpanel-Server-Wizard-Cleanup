@@ -1,4 +1,4 @@
-__all__ = ["run_agent", "scan_email_system", "propose_email_hardening"]
+__all__ = ["run_agent", "scan_email_system", "propose_email_hardening", "__version__"]
 
 from .agent import run_agent  # noqa: E402
 """Cyberzard package (renamed from cyberzard).
@@ -16,3 +16,15 @@ try:  # pragma: no cover
 	from .agent_engine.tools.email_scan import scan_email_system, propose_email_hardening  # noqa: F401
 except Exception:  # pragma: no cover
 	pass
+
+# Central version export
+try:
+	from ._version import __version__  # type: ignore
+except Exception:  # pragma: no cover
+	try:
+		# Fallback to package metadata when installed
+		from importlib.metadata import version as _pkg_version  # type: ignore
+
+		__version__ = _pkg_version("cyberzard")  # type: ignore
+	except Exception:  # final fallback for editable/dev
+		__version__ = "0.0.0+dev"

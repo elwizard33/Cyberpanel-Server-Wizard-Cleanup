@@ -23,6 +23,8 @@ from .evidence import write_scan_snapshot  # will no-op if not implemented
 from .ui import render_scan_output, render_advice_output
 from .agent_engine.verify import verify_plan
 from .chat import run_chat
+from . import __version__
+from . import updater as _updater
 from .n8n_setup import run_n8n_setup
 
 app = typer.Typer(help="Cyberzard – CyberPanel AI assistant & security scan CLI")
@@ -229,23 +231,62 @@ def show_prompt() -> None:
 def version() -> None:
     """Show version information."""
     try:
-        from importlib.metadata import version as _pkg_version  # Python 3.8+
-        v = _pkg_version("cyberzard")
+        from . import __version__
+        v = __version__
     except Exception:
-        v = "unknown"
+        # Fallback to metadata if import failed for some reason
+        try:
+            from importlib.metadata import version as _pkg_version  # Python 3.8+
+            v = _pkg_version("cyberzard")
+        except Exception:
+            v = "unknown"
     typer.echo(f"cyberzard version {v}")
 
 
 @app.command()
 def upgrade(
-    channel: str = typer.Option("edge", "--channel", help="Upgrade channel: edge (main) or stable (latest tag)",
-                                case_sensitive=False)
+    channel: str = typer.Option("stable", "--channel", help="Upgrade channel for releases: stable (latest release) or edge (same as stable for now)", case_sensitive=False),
+    dry_run: bool = typer.Option(False, "--dry-run", help="Show planned actions without performing changes (frozen builds)"),
 ) -> None:
-    """Upgrade Cyberzard to the latest version (git installs)."""
+    """Upgrade Cyberzard to the latest version.
+
+    - For frozen binaries (installer/PyInstaller), uses the built-in self-updater.
+    - For git-based installs (development), attempts a git+pip self update.
+    """
     ch = channel.lower().strip()
     if ch not in {"edge", "stable"}:
         typer.echo("Invalid --channel value. Use: edge | stable")
         raise typer.Exit(code=2)
+
+    before = __version__ if '__version__' in globals() else 'unknown'
+    if _updater.is_frozen():
+        try:
+            res = _updater.upgrade(channel=ch, dry_run=dry_run)
+            status = res.get("status")
+            if status == "dry_run":
+                typer.echo("[dry-run] Would download: " + res.get("download", ""))
+                typer.echo("[dry-run] Would verify using: " + res.get("checksums", ""))
+                typer.echo("[dry-run] Would replace: " + res.get("target", ""))
+                return
+            if status == "ok":
+                after = res.get("version", "unknown")
+                typer.echo(f"✅ Upgraded binary {res.get('target')} to {after}")
+                return
+            if status == "unsupported":
+                # Fall through to git path if not frozen
+                pass
+            else:
+                reason = res.get("reason", "unknown_error")
+                if reason == "checksum_mismatch":
+                    typer.echo("Checksum mismatch while updating. Aborting.")
+                else:
+                    typer.echo(f"Update failed: {reason}")
+                raise typer.Exit(code=1)
+        except Exception as e:
+            typer.echo(f"Update failed: {e}")
+            raise typer.Exit(code=1)
+
+    # Non-frozen or unsupported -> git path
     ok, msg = _self_update(channel=ch)
     if ok:
         typer.echo(f"✅ {msg}")

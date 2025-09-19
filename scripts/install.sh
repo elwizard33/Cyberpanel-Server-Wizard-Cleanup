@@ -1,6 +1,80 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
+REPO="elwizard33/Cyberzard"
+GH_API="https://api.github.com"
+TMP_DIR="$(mktemp -d)"
+trap 'rm -rf "$TMP_DIR"' EXIT
+
+echo "==> Detecting platform"
+OS="$(uname -s | tr '[:upper:]' '[:lower:]')"
+ARCH="$(uname -m | tr '[:upper:]' '[:lower:]')"
+case "$ARCH" in
+  x86_64|amd64) ARCH="x86_64" ;;
+  arm64|aarch64) ARCH="arm64" ;;
+esac
+if [[ "$OS" == "darwin" ]]; then OS_TAG="macos"; else OS_TAG="linux"; fi
+ASSET="cyberzard-${OS_TAG}-${ARCH}"
+
+echo "==> Fetching latest release metadata"
+JSON="$TMP_DIR/release.json"
+curl -fsSL "${GH_API}/repos/${REPO}/releases/latest" -o "$JSON"
+
+ASSET_URL=$(jq -r --arg NAME "$ASSET" '.assets[] | select(.name==$NAME) | .browser_download_url' "$JSON")
+CHECKS_URL=$(jq -r '.assets[] | select(.name=="checksums.txt") | .browser_download_url' "$JSON")
+TAG=$(jq -r '.tag_name' "$JSON")
+
+if [[ -z "$ASSET_URL" || -z "$CHECKS_URL" || "$ASSET_URL" == "null" || "$CHECKS_URL" == "null" ]]; then
+  echo "Error: Could not find assets for $ASSET" >&2
+  exit 1
+fi
+
+echo "==> Downloading binary and checksums ($TAG)"
+BIN="$TMP_DIR/$ASSET"
+SUM="$TMP_DIR/checksums.txt"
+curl -fsSL "$ASSET_URL" -o "$BIN"
+curl -fsSL "$CHECKS_URL" -o "$SUM"
+
+echo "==> Verifying checksum"
+EXPECTED=$(grep -E "[[:xdigit:]]+\s+\*?$ASSET$" "$SUM" | awk '{print $1}')
+if [[ -z "$EXPECTED" ]]; then
+  echo "Error: checksum entry not found for $ASSET" >&2
+  exit 1
+fi
+GOT=$(shasum -a 256 "$BIN" | awk '{print $1}')
+if [[ "$EXPECTED" != "$GOT" ]]; then
+  echo "Error: checksum mismatch. expected=$EXPECTED got=$GOT" >&2
+  exit 1
+fi
+
+chmod +x "$BIN"
+
+DEST_DIR="/usr/local/bin"
+if [[ ! -w "$DEST_DIR" ]]; then
+  if command -v sudo >/dev/null 2>&1; then
+    echo "==> Installing to $DEST_DIR with sudo"
+    sudo install -m 0755 "$BIN" "$DEST_DIR/cyberzard"
+  else
+    echo "==> No sudo; installing to ~/.local/bin"
+    DEST_DIR="$HOME/.local/bin"
+    mkdir -p "$DEST_DIR"
+    install -m 0755 "$BIN" "$DEST_DIR/cyberzard"
+    case ":$PATH:" in
+      *":$DEST_DIR:"*) ;;
+      *) echo "Add $DEST_DIR to your PATH" ;;
+    esac
+  fi
+else
+  echo "==> Installing to $DEST_DIR"
+  install -m 0755 "$BIN" "$DEST_DIR/cyberzard"
+fi
+
+echo "==> Installed: $(command -v cyberzard || true)"
+echo "==> Version: $(cyberzard version || true)"
+echo "Done."
+#!/usr/bin/env bash
+set -euo pipefail
+
 # Cyberzard installer — creates a user-local venv and links the CLI into ~/.local/bin
 # Usage:
 #   bash -c "$(curl -fsSL https://raw.githubusercontent.com/elwizard33/Cyberzard/main/scripts/install.sh)"

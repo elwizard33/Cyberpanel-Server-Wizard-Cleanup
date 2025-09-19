@@ -23,7 +23,9 @@ CYBERZARD_EXTRAS=anthropic bash -c "$(curl -fsSL https://raw.githubusercontent.c
 ```
 
 ### Install from Release (no git)
-Install the latest packaged wheel from GitHub Releases (Linux/macOS):
+We publish both Python wheels and standalone binaries for Linux and macOS (x86_64 and arm64).
+
+Install the latest packaged wheel (Linux/macOS):
 ```bash
 # Fetch the latest wheel's browser_download_url and install (no jq required)
 WHEEL_URL=$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest \
@@ -68,6 +70,27 @@ python -m pip install -U pip setuptools wheel
 pip install -e .   # or .[openai] / .[anthropic]
 ```
 
+### Standalone binary (Linux)
+On each GitHub Release we attach a Linux x86_64 binary:
+
+- `cyberzard-linux-x86_64`
+
+Download, `chmod +x`, and run on your Linux CyberPanel server:
+```bash
+curl -fsSL -o cyberzard-linux-x86_64 \
+	https://github.com/elwizard33/Cyberzard/releases/download/$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\(v[^"[:space:]]*\)".*/\1/p')/cyberzard-linux-x86_64 && \
+chmod +x cyberzard-linux-x86_64
+```
+
+Verifying checksums:
+```bash
+curl -fsSL -O \
+	https://github.com/elwizard33/Cyberzard/releases/download/$(curl -fsSL https://api.github.com/repos/elwizard33/Cyberzard/releases/latest | sed -n 's/.*"tag_name"[[:space:]]*:[[:space:]]*"\(v[^"[:space:]]*\)".*/\1/p')/checksums.txt
+shasum -a 256 cyberzard-* | grep -F -f <(cut -d' ' -f1 checksums.txt) || echo 'Checksum mismatch!'
+```
+
+Note: If you’re on macOS or Windows, deploy to or SSH into your Linux CyberPanel server and run the binary there. For local development on macOS, install from source.
+
 ### Install from release (PyPI)
 Planned for future. For now, use the one-liner installer or source install above.
 
@@ -97,6 +120,8 @@ pip install -e . --upgrade   # or pip install . --upgrade
 ```
 
 When PyPI releases are available, this section will be updated.
+
+See also: [Upgrade & Troubleshooting](./upgrade)
 
 ## Troubleshooting
 

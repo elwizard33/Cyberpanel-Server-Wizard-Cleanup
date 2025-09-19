@@ -1,46 +1,87 @@
-name: Release
+name: release
 
 on:
-  workflow_dispatch:
   push:
     tags:
-      - 'v*.*.*'
-
-permissions:
-  contents: write
+      - 'v*'
 
 jobs:
   build:
-    runs-on: ubuntu-latest
+    name: build-${{ matrix.label }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            label: linux-x86_64
+            arch: x86_64
     steps:
       - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+        with:
+          fetch-depth: 0
+      - name: Setup Python
+        uses: actions/setup-python@v5
         with:
           python-version: '3.11'
-      - name: Install build backend
+      - name: Install dependencies
         run: |
-          python -m pip install -U pip setuptools wheel build
-      - name: Build sdist and wheel
+          python -m pip install --upgrade pip
+          python -m pip install -e . pyinstaller
+      - name: Build binary
+        env:
+          VERSION: ${{ github.ref_name }}
+          TARGET_ARCH: ${{ matrix.arch }}
         run: |
-          python -m build
-      - name: Upload artifacts
+          # Ensure PyInstaller installed
+          python build/build_binary.py
+      - name: Smoke test binary
+        run: |
+          set -euo pipefail
+          NAME_BASE="cyberzard-linux-x86_64"
+          BIN="dist/$NAME_BASE"
+          echo "Testing $BIN"
+          [[ -f "$BIN" ]] || (echo "Missing $BIN" && ls -la dist && exit 1)
+          chmod +x "$BIN"
+          "$BIN" --help >/dev/null
+          "$BIN" version
+      - name: Upload artifact
         uses: actions/upload-artifact@v4
         with:
-          name: dist
+          name: dist-${{ runner.os }}
           path: dist/*
 
-  github-release:
-    if: startsWith(github.ref, 'refs/tags/v')
+  publish:
     needs: build
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/download-artifact@v4
+      - uses: actions/checkout@v4
         with:
-          name: dist
+          fetch-depth: 0
+      - name: Download artifacts
+        uses: actions/download-artifact@v4
+        with:
           path: dist
-      - name: Create GitHub Release
-        uses: softprops/action-gh-release@v2
+      - name: Flatten artifacts
+        run: |
+          mkdir -p upload
+          find dist -type f -maxdepth 2 -exec cp {} upload/ \;
+      - name: Generate checksums
+        run: |
+          cd upload
+          shopt -s nullglob
+          for f in cyberzard-*; do
+            shasum -a 256 "$f" >> checksums.txt
+          done
+          cat checksums.txt
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
         with:
-          files: dist/*
+          tag_name: ${{ github.ref_name }}
+          name: ${{ github.ref_name }}
+          draft: false
+          prerelease: false
+          files: |
+            upload/cyberzard-*
+            upload/checksums.txt
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

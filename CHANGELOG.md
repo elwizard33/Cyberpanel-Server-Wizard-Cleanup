@@ -72,18 +72,17 @@ The format is based on Keep a Changelog, and this project adheres to Semantic Ve
 
 ## [0.1.7] - 2025-09-17
 ### Added
-- Agent-mediated execution for n8n setup and email troubleshooting flows, with safe fallback to subprocess
-- Permission gating for n8n apply and email actions (interactive preview + `--auto-approve` for headless)
-- Persistent logs
 	- n8n: script-side `.log` capturing method, script, combined output, and explicit exit code marker
 	- email: `--log-dir` flag writes structured JSON execution logs per run
-- Memory recording
 	- n8n: chat history session `n8n` records applied/aborted state, mode, and paths
 	- email: chat history session `email-troubleshooting` records summary counters and log path
 ### CLI
-- n8n: `--interactive/--no-interactive`, `--auto-approve`, `--json-out`
-- email: `--log-dir` added to `email-security` / `email-fix`
 ### Docs
-- n8n Setup page updated with agent execution, permission gating, and logs
-- Email Security page updated with agent execution note, `--log-dir`, and memory info
-- Commands page gained a new "Logs and Memory" section covering both flows
+## v0.1.8 - 2025-09-18
+### Changed
+- Release workflow trimmed to Linux x86_64 binary only; macOS artifacts removed.
+- Installation and Upgrade docs updated to reflect Linux-only binary support and how to use from macOS/Windows via SSH or source install.
+
+### Fixed
+- GitHub Actions workflow no longer references secrets in job-level conditions; step now skips cleanly if signing secrets are absent.
+
