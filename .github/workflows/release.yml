@@ -33,7 +33,14 @@ jobs:
       - name: Build binary (Linux)
         run: |
           set -euo pipefail
-          pyinstaller --onefile --name "cyberzard-linux-x86_64" cyberzard/__main__.py
+          # Create a launcher script that PyInstaller can handle
+          cat > launcher.py << 'EOF'
+          import sys
+          from cyberzard.cli import app
+          if __name__ == "__main__":
+              app()
+          EOF
+          pyinstaller --onefile --name "cyberzard-linux-x86_64" launcher.py
       - name: Smoke test binary
         run: |
           set -euo pipefail

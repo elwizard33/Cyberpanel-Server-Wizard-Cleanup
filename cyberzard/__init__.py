@@ -27,4 +27,4 @@ except Exception:  # pragma: no cover
 
 		__version__ = _pkg_version("cyberzard")  # type: ignore
 	except Exception:  # final fallback for editable/dev
-		__version__ = "0.0.0+dev"
+		__version__ = "0.1.10"

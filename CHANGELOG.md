@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.10] - 2024-09-18
+### Fixed
+- PyInstaller binary build now uses proper launcher script instead of relative imports
+- Resolves ImportError during binary smoke test in release workflow
+
 ## [0.1.9] - 2024-09-18
 ### Added
 - Optional Textual TUI via `cyberzard tui` command
