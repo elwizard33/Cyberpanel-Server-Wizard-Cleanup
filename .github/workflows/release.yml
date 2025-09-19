@@ -31,6 +31,7 @@ jobs:
           python -m pip install --upgrade pip
           python -m pip install -e . pyinstaller
           python -m pip install 'textual>=0.60'
+          python -m pip install 'langchain>=0.1.0' 'langchain-openai>=0.1.0' 'langchain-anthropic>=0.1.0' 'langchain-community>=0.1.0' 'langchain-core>=0.1.0'
       - name: Build binary (Linux)
         run: |
           set -euo pipefail
@@ -47,6 +48,17 @@ jobs:
             --hidden-import=textual.widgets \
             --hidden-import=textual.reactive \
             --hidden-import=cyberzard.tui \
+            --hidden-import=langchain \
+            --hidden-import=langchain.agents \
+            --hidden-import=langchain_openai \
+            --hidden-import=langchain_anthropic \
+            --hidden-import=langchain_community \
+            --hidden-import=langchain_core \
+            --collect-all=langchain \
+            --collect-all=langchain_openai \
+            --collect-all=langchain_anthropic \
+            --collect-all=langchain_community \
+            --collect-all=langchain_core \
             launcher.py
       - name: Smoke test binary
         run: |

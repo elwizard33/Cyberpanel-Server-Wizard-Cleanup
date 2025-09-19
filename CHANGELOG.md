@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.12] - 2024-09-18
+### Fixed
+- PyInstaller binary build now includes complete LangChain dependency chain
+- Adds langchain-community and langchain-core to hidden imports and collections
+- Resolves ModuleNotFoundError for langchain during binary execution
+
 ## [0.1.11] - 2024-09-18
 ### Fixed
 - PyInstaller binary build now includes Textual dependencies and hidden imports
