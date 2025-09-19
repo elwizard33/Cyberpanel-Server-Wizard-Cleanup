@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.11] - 2024-09-18
+### Fixed
+- PyInstaller binary build now includes Textual dependencies and hidden imports
+- Explicitly installs textual during build to ensure TUI functionality in binary
+
 ## [0.1.10] - 2024-09-18
 ### Fixed
 - PyInstaller binary build now uses proper launcher script instead of relative imports
