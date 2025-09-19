@@ -5,6 +5,9 @@ on:
     tags:
       - 'v*'
 
+permissions:
+  contents: write
+
 jobs:
   build:
     name: build-${{ matrix.label }}
@@ -67,7 +70,7 @@ jobs:
           cd upload
           shopt -s nullglob
           for f in cyberzard-*; do
-            shasum -a 256 "$f" >> checksums.txt
+            sha256sum "$f" >> checksums.txt
           done
           cat checksums.txt
       - name: Create Release
