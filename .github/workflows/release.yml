@@ -15,7 +15,7 @@ jobs:
     strategy:
       matrix:
         include:
-          - os: ubuntu-latest
+          - os: ubuntu-20.04  # Use older Ubuntu for better GLIBC compatibility
             label: linux-x86_64
             arch: x86_64
     steps:
@@ -78,7 +78,7 @@ jobs:
 
   publish:
     needs: build
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-20.04  # Use same Ubuntu version for consistency
     steps:
       - uses: actions/checkout@v4
         with:

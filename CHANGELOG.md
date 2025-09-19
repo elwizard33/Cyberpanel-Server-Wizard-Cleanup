@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 
 The format is based on Keep a Changelog, and this project adheres to Semantic Versioning.
 
+## [0.1.14] - 2024-09-18
+### Fixed
+- Use Ubuntu 20.04 for binary builds to improve GLIBC compatibility
+- Resolves "GLIBC_2.38 not found" error on older Linux systems
+- Binary now compatible with GLIBC 2.31+ instead of requiring 2.38+
+
 ## [0.1.13] - 2024-09-18
 ### Fixed
 - ChatOpenAI model initialization is now lazy to avoid requiring API key at import time
